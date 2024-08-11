@@ -12,9 +12,9 @@
     "dev": "pnpm run build:esm+types --watch",
     "test": "echo \"Error: no test specified\" && exit 0",
     "build": "pnpm run build:esm+types",
-    "build:esm+types": "tsc --project ./tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
+    "build:esm+types": "tsc --project ./etc/tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
     "clean": "rm -rf dist && rm -rf node_modules",
-    "lint": "eslint ."
+    "lint": "eslint 'src/**/*.{m,c,}ts' 'test/**/*.{m,c,}ts' --config ./etc/eslint.config.mjs --no-error-on-unmatched-pattern"
   },
   "author": "La Crypta Labs",
   "license": "MIT",

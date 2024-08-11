@@ -2,6 +2,14 @@
 
 SDK for LaWallet
 
+## To - do
+
+- [x] Project startup (Linters, Typescript, Dependencies)
+- [x] Federation
+- [ ] Identity
+- [ ] Wallet
+- [ ] Client
+
 ## Installation
 
 ```bash

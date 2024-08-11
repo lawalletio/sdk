@@ -4,7 +4,7 @@ import { Federation } from './Federation.js';
 import { Wallet } from './Wallet.js';
 
 export class Client {
-  private ndk: NDK;
+  // private ndk: NDK;
   private federation: Federation;
   private accounts: Wallet[] = [];
 
