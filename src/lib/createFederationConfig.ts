@@ -1,25 +1,25 @@
-import { baseConfig } from '../constants/config.js';
-import type { FederationConfig } from '../types/FederationConfig.js';
+import { LAWALLET_DEFAULT_CONFIG } from '../constants/config.js';
+import type { FederationConfig } from '../types/Federation.js';
 
 export interface CreateFederationConfigParams {
   federationId?: string;
-  endpoints?: Partial<typeof baseConfig.endpoints>;
-  modulePubkeys?: Partial<typeof baseConfig.modulePubkeys>;
+  endpoints?: Partial<typeof LAWALLET_DEFAULT_CONFIG.endpoints>;
+  modulePubkeys?: Partial<typeof LAWALLET_DEFAULT_CONFIG.modulePubkeys>;
   relaysList?: string[];
 }
 
 export function createFederationConfig(parameters: CreateFederationConfigParams = {}): FederationConfig {
   return {
-    ...baseConfig,
+    ...LAWALLET_DEFAULT_CONFIG,
     ...parameters,
     endpoints: {
-      ...baseConfig.endpoints,
+      ...LAWALLET_DEFAULT_CONFIG.endpoints,
       ...parameters.endpoints,
     },
     modulePubkeys: {
-      ...baseConfig.modulePubkeys,
+      ...LAWALLET_DEFAULT_CONFIG.modulePubkeys,
       ...parameters.modulePubkeys,
     },
-    relaysList: parameters.relaysList ?? baseConfig.relaysList,
+    relaysList: parameters.relaysList ?? LAWALLET_DEFAULT_CONFIG.relaysList,
   };
 }

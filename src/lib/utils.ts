@@ -1,6 +1,9 @@
-import { baseConfig } from '../constants/config';
+import { LAWALLET_DEFAULT_CONFIG } from '../constants/config';
 
-export const getUsername = (pubkey: string, lightningDomain: string = baseConfig.endpoints.lightningDomain) => {
+export const getUsername = (
+  pubkey: string,
+  lightningDomain: string = LAWALLET_DEFAULT_CONFIG.endpoints.lightningDomain,
+) => {
   return fetch(`${lightningDomain}/api/pubkey/${pubkey}`)
     .then(async (res) => {
       const response = (await res.json()) as { username: string };
