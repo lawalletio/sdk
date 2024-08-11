@@ -1,7 +1,7 @@
-import { Identity } from './Identity.js';
-import { type CreateFederationConfigParams } from '../lib/createFederationConfig.js';
-import { Transaction } from '../types/Transaction.js';
 import { NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import type { CreateFederationConfigParams } from '../types/Federation.js';
+import { Transaction } from '../types/Transaction.js';
+import { Identity } from './Identity.js';
 
 type WalletParameters = {
   signer: NDKSigner;
@@ -15,19 +15,12 @@ export class Wallet extends Identity {
     super(pubkey, params.federationConfig);
   }
 
-  // get walias(): string {
-  //   let domain = normalizeLightningDomain(this._federation.endpoints.lightningDomain);
-  //   return `${this.username}@${domain}`;
-  // }
-
   getTransactions(): Transaction[] {
-    // Lógica para obtener las transacciones del usuario
-    return []; // Array de transacciones
+    return [];
   }
 
   getBalance(): number {
-    // Lógica para obtener el balance de la wallet
-    return 0; // Balance en alguna unidad monetaria
+    return 0;
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
@@ -47,8 +40,6 @@ export class Wallet extends Identity {
 
   sendTransaction(transaction: string): boolean {
     console.log(transaction);
-    // publish transaction on relay
-    // console.log('Transaction sent:', transaction);
     return true;
   }
 }

@@ -1,12 +1,5 @@
 import { LAWALLET_DEFAULT_CONFIG } from '../constants/config.js';
-import type { FederationConfig } from '../types/Federation.js';
-
-export interface CreateFederationConfigParams {
-  federationId?: string;
-  endpoints?: Partial<typeof LAWALLET_DEFAULT_CONFIG.endpoints>;
-  modulePubkeys?: Partial<typeof LAWALLET_DEFAULT_CONFIG.modulePubkeys>;
-  relaysList?: string[];
-}
+import type { CreateFederationConfigParams, FederationConfig } from '../types/Federation.js';
 
 export function createFederationConfig(parameters: CreateFederationConfigParams = {}): FederationConfig {
   return {

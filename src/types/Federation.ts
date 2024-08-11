@@ -1,3 +1,5 @@
+import { LAWALLET_DEFAULT_CONFIG } from '../constants/config';
+
 export type EndpointsConfigType = {
   lightningDomain: string;
   gateway: string;
@@ -14,4 +16,11 @@ export interface FederationConfig {
   endpoints: EndpointsConfigType;
   modulePubkeys: ModulePubkeysConfigType;
   relaysList: string[];
+}
+
+export interface CreateFederationConfigParams {
+  federationId?: string;
+  endpoints?: Partial<typeof LAWALLET_DEFAULT_CONFIG.endpoints>;
+  modulePubkeys?: Partial<typeof LAWALLET_DEFAULT_CONFIG.modulePubkeys>;
+  relaysList?: string[];
 }
