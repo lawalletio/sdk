@@ -1,4 +1,4 @@
-# @lawallet/react
+# @lawallet/sdk
 
 SDK for LaWallet
 
