@@ -1,0 +1,71 @@
+{
+  "name": "@lawallet/sdk",
+  "version": "0.1.0",
+  "description": "LaWallet software dev kit",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lawalletio/la-wallet-monorepo.git",
+    "directory": "packages/sdk"
+  },
+  "scripts": {
+    "dev": "pnpm run build:esm+types --watch",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "build": "pnpm run build:esm+types",
+    "build:esm+types": "tsc --project ./tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "lint": "eslint ."
+  },
+  "author": "La Crypta Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/compat": "^1.1.1",
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.9.0",
+    "@lacrypta/typescript-config": "^1.0.0",
+    "@noble/secp256k1": "^2.0.0",
+    "@scure/base": "1.1.5",
+    "@types/node": "^20.11.17",
+    "@typescript-eslint/eslint-plugin": "^8.0.1",
+    "eslint": "9.9.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@nostr-dev-kit/ndk": "2.4.0",
+    "date-fns": "^3.6.0"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "main": "./dist/esm/exports/index.js",
+  "types": "./dist/types/exports/index.d.ts",
+  "typings": "./dist/types/exports/index.d.ts",
+  "files": [
+    "dist/**",
+    "!dist/**/*.tsbuildinfo",
+    "src/**/*.ts",
+    "!src/**/*.test.ts",
+    "!src/**/*.test-d.ts",
+    "/actions",
+    "/types"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/exports/index.d.ts",
+      "default": "./dist/esm/exports/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/exports/types.d.ts",
+      "default": "./dist/esm/exports/types.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "./dist/types/exports/types.d.ts"
+      ]
+    }
+  }
+}
