@@ -9,7 +9,7 @@ export type ModulePubkeysConfigType = {
   urlx: string;
 };
 
-export interface LWConfig {
+export interface FederationConfig {
   federationId: string;
   endpoints: EndpointsConfigType;
   modulePubkeys: ModulePubkeysConfigType;

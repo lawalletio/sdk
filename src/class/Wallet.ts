@@ -1,5 +1,5 @@
 import { Identity } from './Identity.js';
-import { type CreateFederationConfigParams } from '../utils/createFederationConfig.js';
+import { type CreateFederationConfigParams } from '../lib/createFederationConfig.js';
 import { Transaction } from '../types/Transaction.js';
 import { NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 
@@ -15,13 +15,10 @@ export class Wallet extends Identity {
     super(pubkey, params.federationConfig);
   }
 
-  getAddress(): string {
-    return `@${this.federation.id}`;
-  }
-
-  getWalias(): string {
-    return `.wallet`;
-  }
+  // get walias(): string {
+  //   let domain = normalizeLightningDomain(this._federation.endpoints.lightningDomain);
+  //   return `${this.username}@${domain}`;
+  // }
 
   getTransactions(): Transaction[] {
     // Lógica para obtener las transacciones del usuario

@@ -1,15 +1,19 @@
 import NDK, { NDKFilter } from '@nostr-dev-kit/ndk';
-import { type CreateFederationConfigParams } from '../utils/createFederationConfig.js';
+import { type CreateFederationConfigParams } from '../lib/createFederationConfig.js';
 import { Federation } from './Federation.js';
 import { Wallet } from './Wallet.js';
 
 export class Client {
   // private ndk: NDK;
-  private federation: Federation;
+  private _federation: Federation;
   private accounts: Wallet[] = [];
 
   constructor(federationParams: CreateFederationConfigParams) {
-    this.federation = new Federation(federationParams);
+    this._federation = new Federation(federationParams);
+  }
+
+  get federation() {
+    return this._federation;
   }
 
   getAccounts(): Wallet[] {

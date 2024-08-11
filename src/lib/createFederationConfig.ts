@@ -1,5 +1,5 @@
 import { baseConfig } from '../constants/config.js';
-import type { LWConfig } from '../types/LWConfig.js';
+import type { FederationConfig } from '../types/FederationConfig.js';
 
 export interface CreateFederationConfigParams {
   federationId?: string;
@@ -8,7 +8,7 @@ export interface CreateFederationConfigParams {
   relaysList?: string[];
 }
 
-export function createFederationConfig(parameters: CreateFederationConfigParams = {}): LWConfig {
+export function createFederationConfig(parameters: CreateFederationConfigParams = {}): FederationConfig {
   return {
     ...baseConfig,
     ...parameters,

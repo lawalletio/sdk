@@ -1,6 +1,6 @@
-import type { LWConfig } from '../types/LWConfig.js';
+import type { FederationConfig } from '../types/FederationConfig.js';
 
-export const baseConfig: LWConfig = {
+export const baseConfig: FederationConfig = {
   federationId: 'lawallet.ar',
   endpoints: {
     gateway: 'https://api.lawallet.ar',

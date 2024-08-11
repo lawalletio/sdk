@@ -1,26 +1,30 @@
-import type { EndpointsConfigType, LWConfig, ModulePubkeysConfigType } from '../types/LWConfig.js';
-import { createFederationConfig, type CreateFederationConfigParams } from '../utils/createFederationConfig.js';
+import type { FederationConfig, ModulePubkeysConfigType } from '../types/Federation.js';
+import { createFederationConfig, type CreateFederationConfigParams } from '../lib/createFederationConfig.js';
 
 export class Federation {
-  config: LWConfig;
+  private _config: FederationConfig;
 
   constructor(federationConfig?: CreateFederationConfigParams) {
-    this.config = createFederationConfig(federationConfig);
+    this._config = createFederationConfig(federationConfig);
   }
 
   get id(): string {
-    return this.config.federationId;
+    return this._config.federationId;
   }
 
-  get endpoints(): EndpointsConfigType {
-    return this.config.endpoints;
+  get lightningDomain(): string {
+    return this._config.endpoints.lightningDomain;
+  }
+
+  get apiGateway(): string {
+    return this._config.endpoints.gateway;
   }
 
   get modulePubkeys(): ModulePubkeysConfigType {
-    return this.config.modulePubkeys;
+    return this._config.modulePubkeys;
   }
 
   get relaysList(): string[] {
-    return this.config.relaysList;
+    return this._config.relaysList;
   }
 }
