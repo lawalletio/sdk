@@ -1,16 +1,18 @@
-import { Federation } from './Federation.js';
 import { Identity } from './Identity.js';
 import { type CreateFederationConfigParams } from '../utils/createFederationConfig.js';
 import { Transaction } from '../types/Transaction.js';
-import { NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 
-export class Wallet {
-  private federation: Federation;
-  private identity: Identity;
+type WalletParameters = {
+  signer: NDKSigner;
+  federationConfig?: CreateFederationConfigParams;
+};
 
-  constructor(name: string, federationParams: CreateFederationConfigParams) {
-    this.federation = new Federation(federationParams);
-    this.identity = new Identity(name, federationParams);
+export class Wallet extends Identity {
+  constructor(params: WalletParameters) {
+    const pubkey = ''; //obtener pubkey del signer
+
+    super(pubkey, params.federationConfig);
   }
 
   getAddress(): string {
