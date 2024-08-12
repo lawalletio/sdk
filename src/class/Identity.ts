@@ -1,26 +1,25 @@
 import { LightningAddress } from '@getalby/lightning-tools';
-import { getUsername, normalizeLightningDomain, parseWalias } from '../lib/utils.js';
+import { nip19 } from 'nostr-tools';
+import { getUsername, parseWalias } from '../lib/utils.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import { Federation } from './Federation.js';
-import { NDKUser } from '@nostr-dev-kit/ndk';
 
 export class Identity {
   private _federation: Federation;
   private _username: string = '';
   private _ln: LightningAddress | undefined;
-  private _user: NDKUser | undefined;
+  private _pubkey: string;
 
   constructor(pubkey: string, federationConfig?: CreateFederationConfigParams) {
     if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
 
     this._federation = new Federation(federationConfig);
-    this.initializeUser(pubkey, this._federation);
+    this._pubkey = pubkey;
+
+    this.initializeWalias(pubkey, this._federation);
   }
 
-  async initializeUser(pubkey: string, federation: Federation) {
-    this._user = new NDKUser({ pubkey });
-    await this._user.fetchProfile();
-
+  async initializeWalias(pubkey: string, federation: Federation) {
     const username: string = await getUsername(pubkey, federation.lightningDomain);
 
     if (username.length) {
@@ -31,8 +30,12 @@ export class Identity {
     }
   }
 
-  get user() {
-    return this._user;
+  get pubkey() {
+    return this._pubkey;
+  }
+
+  get npub() {
+    return nip19.npubEncode(this._pubkey);
   }
 
   get username() {
@@ -40,8 +43,9 @@ export class Identity {
   }
 
   get walias() {
-    let domain = normalizeLightningDomain(this._federation.lightningDomain);
-    return `${this.username}@${domain}`;
+    if (!this._username.length) return;
+
+    return parseWalias(this._username, this._federation.lightningDomain);
   }
 
   get lnurlpData() {
