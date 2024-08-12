@@ -10,8 +10,8 @@ export class Identity {
   private _pubkey: string;
   private _username: string = '';
 
-  private _ln: LightningAddress | null = null;
-  private _nostrProfile: NDKUserProfile | null = null;
+  private _ln: LightningAddress | undefined;
+  private _nostrProfile: NDKUserProfile | undefined;
 
   constructor(pubkey: string, federationConfig?: CreateFederationConfigParams, fetchData: boolean = false) {
     if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
@@ -19,10 +19,7 @@ export class Identity {
     this._federation = new Federation(federationConfig);
     this._pubkey = pubkey;
 
-    if (fetchData) {
-      this.fetch();
-      this.fetchProfile();
-    }
+    if (fetchData) this.fetch();
   }
 
   async fetchProfile(ndk?: NDK) {
@@ -32,10 +29,15 @@ export class Identity {
     let user = new NDKUser({ pubkey: this.pubkey });
     user.ndk = ndk;
 
-    let profile = await user.fetchProfile();
-    if (profile) this._nostrProfile = profile;
+    try {
+      let profile = await user.fetchProfile();
+      if (!profile) return;
 
-    return profile;
+      this._nostrProfile = profile;
+      return profile;
+    } catch {
+      return;
+    }
   }
 
   async fetch() {
@@ -51,9 +53,12 @@ export class Identity {
 
       this._ln = ln;
 
+      let profile = await this.fetchProfile();
+
       return {
         walias: this.walias,
         ln,
+        profile,
       };
     } catch (err) {
       return;
