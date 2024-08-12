@@ -17,7 +17,7 @@ export class Wallet extends Identity {
     try {
       // TODO: Refactor the way to retrieve the public key
       const pubkey = getPublicKey(hexToUint8Array(params.privateKey));
-      super(pubkey, params.federationConfig);
+      super({ pubkey, federationConfig: params.federationConfig });
     } catch (err) {
       console.log(err);
       throw new Error('An error occurred while instantiating the wallet');

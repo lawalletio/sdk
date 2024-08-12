@@ -5,6 +5,12 @@ import { createNDKInstance, getUsername, parseWalias } from '../lib/utils.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import { Federation } from './Federation.js';
 
+type IdentityConstructorParameters = {
+  pubkey: string;
+  federationConfig?: CreateFederationConfigParams;
+  onFetch?: (data: any) => void;
+};
+
 export class Identity {
   private _federation: Federation;
   private _pubkey: string;
@@ -13,13 +19,15 @@ export class Identity {
   private _ln: LightningAddress | undefined;
   private _nostrProfile: NDKUserProfile | undefined;
 
-  constructor(pubkey: string, federationConfig?: CreateFederationConfigParams, fetchData: boolean = false) {
-    if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
+  constructor(params: IdentityConstructorParameters) {
+    if (!params.pubkey) throw new Error('You need to define a public key to instantiate an identity.');
 
-    this._federation = new Federation(federationConfig);
-    this._pubkey = pubkey;
+    this._federation = new Federation(params.federationConfig);
+    this._pubkey = params.pubkey;
 
-    if (fetchData) this.fetch();
+    this.fetch().then((response) => {
+      if (params.onFetch) params.onFetch(response);
+    });
   }
 
   async fetchProfile(ndk?: NDK) {
