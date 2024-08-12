@@ -11,6 +11,8 @@ export class Identity {
   private _username: string = '';
   private _ln: LightningAddress | undefined;
 
+  // falta perfil de nostr
+
   constructor(pubkey: string, federationConfig?: CreateFederationConfigParams) {
     if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
 
@@ -48,7 +50,7 @@ export class Identity {
     return parseWalias(this._username, this._federation.lightningDomain);
   }
 
-  get lnurlpData() {
-    return this._ln?.lnurlpData;
+  get lnurlp() {
+    return this._ln;
   }
 }
