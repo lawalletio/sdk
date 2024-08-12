@@ -6,7 +6,7 @@ SDK for LaWallet
 
 - [x] Project startup (Linters, Typescript, Dependencies)
 - [x] Federation
-- [ ] Identity
+- [x] Identity
   - [x] Pubkey info
   - [x] Lightning Info
   - [x] Nostr Profile
