@@ -6,16 +6,15 @@ const identity = new Identity('cee287bb0990a8ecbd1dee7ee7f938200908a5c8aa804b3bd
 //   return new Promise((resolve) => setTimeout(resolve, ms));
 // }
 
-async function test() {
+function test() {
   identity.fetchProfile().then((res) => {
     console.log(res);
   });
-
-  // await sleep(10000);
 }
 
 test();
 
+// await sleep(10000);
 // const wallet = new Wallet({
 //   signer: new NDKPrivateKeySigner('..'),
 // });

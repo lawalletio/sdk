@@ -9,7 +9,7 @@ SDK for LaWallet
 - [ ] Identity
   - [x] Pubkey info
   - [x] Lightning Info
-  - [ ] Nostr Profile
+  - [x] Nostr Profile
 - [ ] Wallet
   - [ ] wallet info (identity, balance, transactions)
   - [ ] createInvoice

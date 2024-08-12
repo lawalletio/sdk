@@ -1,6 +1,6 @@
 import { LightningAddress } from '@getalby/lightning-tools';
-import NDK, { NDKEvent } from '@nostr-dev-kit/ndk';
-import { kinds, nip19 } from 'nostr-tools';
+import NDK, { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
+import { nip19 } from 'nostr-tools';
 import { createNDKInstance, getUsername, parseWalias } from '../lib/utils.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import { Federation } from './Federation.js';
@@ -11,7 +11,7 @@ export class Identity {
   private _username: string = '';
 
   private _ln: LightningAddress | null = null;
-  // private _nostrProfile: NDKUserProfile;
+  private _nostrProfile: NDKUserProfile | null = null;
 
   constructor(pubkey: string, federationConfig?: CreateFederationConfigParams, fetchData: boolean = false) {
     if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
@@ -19,39 +19,45 @@ export class Identity {
     this._federation = new Federation(federationConfig);
     this._pubkey = pubkey;
 
-    if (fetchData) this.fetch();
+    if (fetchData) {
+      this.fetch();
+      this.fetchProfile();
+    }
   }
 
   async fetchProfile(ndk?: NDK) {
     ndk ??= await createNDKInstance(this._federation.relaysList, true);
-
     if (!ndk) throw new Error('No NDK instance found');
 
-    const event: NDKEvent | null = await ndk.fetchEvent({
-      kinds: [kinds.Metadata],
-      authors: [this._pubkey],
-    });
+    let user = new NDKUser({ pubkey: this.pubkey });
+    user.ndk = ndk;
 
-    // TODO: parse user profile from event
-    // add _nostrProfile to Identity
+    let profile = await user.fetchProfile();
+    if (profile) this._nostrProfile = profile;
 
-    return event ? await event.toNostrEvent() : undefined;
+    return profile;
   }
 
   async fetch() {
-    const username: string = await getUsername(this._pubkey, this._federation.lightningDomain);
-    if (!username.length) return;
+    try {
+      const username: string = await getUsername(this._pubkey, this._federation.lightningDomain);
+      if (!username.length)
+        throw new Error('No user was found in this federation that matches the provided public key.');
 
-    let ln = new LightningAddress(parseWalias(username, this._federation.lightningDomain));
-    await ln.fetch();
+      this._username = username;
 
-    this._username = username;
-    this._ln = ln;
+      let ln = new LightningAddress(parseWalias(username, this._federation.lightningDomain));
+      await ln.fetch();
 
-    return {
-      walias: this.walias,
-      ln,
-    };
+      this._ln = ln;
+
+      return {
+        walias: this.walias,
+        ln,
+      };
+    } catch (err) {
+      return;
+    }
   }
 
   get pubkey() {
@@ -71,7 +77,11 @@ export class Identity {
     return parseWalias(this._username, this._federation.lightningDomain);
   }
 
-  get lnurlp() {
+  get ln() {
     return this._ln;
+  }
+
+  get profile() {
+    return this._nostrProfile;
   }
 }
