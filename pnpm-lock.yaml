@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@getalby/lightning-tools':
+    specifier: ^5.0.3
+    version: 5.0.3
   '@nostr-dev-kit/ndk':
     specifier: 2.4.0
     version: 2.4.0(typescript@5.5.4)
@@ -109,6 +112,11 @@ packages:
     resolution: {integrity: sha512-BsWiH1yFGjXXS2yvrf5LyuoSIIbPrGUWob917o+BTKuZ7qJdxX8aJLRxs1fS9n6r7vESrq1OUqb68dANcFXuQQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     dev: true
+
+  /@getalby/lightning-tools@5.0.3:
+    resolution: {integrity: sha512-QG3/SBI5n2py5IgsjP3K+c8eq55eiI3PQB12yo9Pot0b5hcN7TNNoTKn0fgLJjO1iEVCUkF513kDOpjjXwK0hQ==}
+    engines: {node: '>=14'}
+    dev: false
 
   /@humanwhocodes/module-importer@1.0.1:
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}

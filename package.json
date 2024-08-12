@@ -33,6 +33,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@getalby/lightning-tools": "^5.0.3",
     "@nostr-dev-kit/ndk": "2.4.0",
     "date-fns": "^3.6.0"
   },

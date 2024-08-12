@@ -22,3 +22,7 @@ export const normalizeLightningDomain = (lightningDomain: string) => {
     return '';
   }
 };
+
+export const parseWalias = (username: string, lightningDomain: string) => {
+  return `${username}@${normalizeLightningDomain(lightningDomain)}`;
+};
