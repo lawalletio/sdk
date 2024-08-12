@@ -6,28 +6,29 @@ import { Federation } from './Federation.js';
 
 export class Identity {
   private _federation: Federation;
+  private _pubkey: string;
+
   private _username: string = '';
   private _ln: LightningAddress | undefined;
-  private _pubkey: string;
 
   constructor(pubkey: string, federationConfig?: CreateFederationConfigParams) {
     if (!pubkey) throw new Error('You need to define a public key to instantiate an identity.');
 
     this._federation = new Federation(federationConfig);
     this._pubkey = pubkey;
-
-    this.initializeWalias(pubkey, this._federation);
+    this.fetch();
   }
 
-  async initializeWalias(pubkey: string, federation: Federation) {
-    const username: string = await getUsername(pubkey, federation.lightningDomain);
+  async fetch() {
+    const username: string = await getUsername(this._pubkey, this._federation.lightningDomain);
+    if (!username.length) return;
 
-    if (username.length) {
-      this._username = username;
+    this._username = username;
 
-      this._ln = new LightningAddress(parseWalias(username, federation.lightningDomain));
-      await this._ln.fetch();
-    }
+    this._ln = new LightningAddress(parseWalias(username, this._federation.lightningDomain));
+    await this._ln.fetch();
+
+    return this._ln.lnurlpData;
   }
 
   get pubkey() {
@@ -44,7 +45,6 @@ export class Identity {
 
   get walias() {
     if (!this._username.length) return;
-
     return parseWalias(this._username, this._federation.lightningDomain);
   }
 
