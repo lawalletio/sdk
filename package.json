@@ -30,7 +30,8 @@
     "eslint": "9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "ws": "^8.18.0"
   },
   "dependencies": {
     "@getalby/lightning-tools": "^5.0.3",

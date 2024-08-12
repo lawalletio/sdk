@@ -1,18 +1,27 @@
-import { NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { getPublicKey } from 'nostr-tools';
+import { hexToUint8Array } from '../lib/utils.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import { Transaction } from '../types/Transaction.js';
 import { Identity } from './Identity.js';
 
 type WalletParameters = {
-  signer: NDKSigner;
   federationConfig?: CreateFederationConfigParams;
+  privateKey: string; // TODO: Change Private Key to signer:NDKSigner
 };
 
 export class Wallet extends Identity {
   constructor(params: WalletParameters) {
-    const pubkey = ''; //obtener pubkey del signer
+    if (!params.privateKey) throw new Error('A signer is required to create a wallet instance.');
 
-    super(pubkey, params.federationConfig);
+    try {
+      // TODO: Refactor the way to retrieve the public key
+      const pubkey = getPublicKey(hexToUint8Array(params.privateKey));
+      super(pubkey, params.federationConfig);
+    } catch (err) {
+      console.log(err);
+      throw new Error('An error occurred while instantiating the wallet');
+    }
   }
 
   getTransactions(): Transaction[] {
