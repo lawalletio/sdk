@@ -6,6 +6,10 @@ export enum LaWalletKinds {
   PARAMETRIZED_REPLACEABLE = 31111,
 }
 
+export const nowInSeconds = (): number => {
+  return Math.floor(Date.now() / 1000);
+};
+
 export const normalizeLightningDomain = (lightningDomain: string) => {
   try {
     const iURL = new URL(lightningDomain);

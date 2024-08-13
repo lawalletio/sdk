@@ -1,9 +1,17 @@
-import NDK, { NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
-import { getPublicKey } from 'nostr-tools';
-import { checkRelaysConnection, disconnectRelays, hexToUint8Array, LaWalletKinds } from '../lib/utils';
+import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { getPublicKey, UnsignedEvent } from 'nostr-tools';
+import {
+  checkRelaysConnection,
+  createNDKInstance,
+  disconnectRelays,
+  hexToUint8Array,
+  LaWalletKinds,
+  nowInSeconds,
+} from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Transaction } from '../types/Transaction';
 import { FetchParameters, Identity } from './Identity';
+import { Federation } from './Federation';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -20,9 +28,13 @@ export class Wallet extends Identity {
     if (!signer.privateKey) throw new Error('A signer is required to create a wallet instance.');
 
     try {
+      const federation = new Federation(params?.federationConfig);
+      const ndk = params?.ndk ?? createNDKInstance(federation.relaysList, signer);
+
       // TODO: Refactor the way to retrieve the public key
       const pubkey = getPublicKey(hexToUint8Array(signer.privateKey));
-      super({ pubkey, ndk: params?.ndk, federationConfig: params?.federationConfig, fetchParams: params?.fetchParams });
+
+      super({ pubkey, ndk, federation, fetchParams: params?.fetchParams });
 
       this._signer = signer;
     } catch (err) {
@@ -69,9 +81,26 @@ export class Wallet extends Identity {
     return {} as NostrEvent;
   }
 
-  signEvent(event: NostrEvent): NostrEvent {
-    console.log(event);
-    return {} as NostrEvent;
+  async signEvent(event: Partial<NostrEvent>): Promise<NostrEvent> {
+    if (!this.signer) throw new Error('Signer not found');
+
+    try {
+      const eventTemplate: UnsignedEvent = {
+        kind: 0,
+        content: '',
+        created_at: nowInSeconds(),
+        tags: [],
+        pubkey: this.pubkey,
+        ...event,
+      };
+
+      const ndkEvent: NDKEvent = new NDKEvent(this.ndk, eventTemplate);
+      await ndkEvent.sign();
+
+      return ndkEvent.toNostrEvent();
+    } catch (err) {
+      throw err;
+    }
   }
 
   sendTransaction(transaction: string): boolean {

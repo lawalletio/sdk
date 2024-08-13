@@ -17,7 +17,7 @@ const DEFAULT_FETCH_PARAMS: FetchParameters = {
 type IdentityConstructorParameters = {
   pubkey: string;
   ndk?: NDK;
-  federationConfig?: CreateFederationConfigParams;
+  federation?: Federation;
   fetchParams?: FetchParameters;
 };
 
@@ -33,7 +33,7 @@ export class Identity {
   constructor(params: IdentityConstructorParameters) {
     if (!params.pubkey) throw new Error('You need to define a public key to instantiate an identity.');
 
-    this._federation = new Federation(params.federationConfig);
+    this._federation = params.federation ?? new Federation();
     this._pubkey = params.pubkey;
 
     this._ndk = params.ndk ?? createNDKInstance(this._federation.relaysList);
