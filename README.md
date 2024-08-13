@@ -21,6 +21,8 @@ SDK for LaWallet
   - [x] signEvent
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
+    - [ ] onSuccess()
+    - [ ] onError()
 - [ ] Client
   - [ ] Multiples accounts
     - [ ] accounts  
