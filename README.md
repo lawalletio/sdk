@@ -2,6 +2,29 @@
 
 SDK for LaWallet
 
+## Important
+
+This package is under development and is not yet available on npm.
+
+## Installation
+
+```bash
+pnpm add @lawallet/sdk @nostr-dev-kit/ndk
+```
+
+## Usage
+
+```ts
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
+import { Wallet } from '@lawallet/sdk'
+
+const signer = NDKPrivateKeySigner.generate()
+const wallet = new Wallet({ signer });
+
+const balance = await wallet.getBalance("BTC"); // Returns BTC balance in millisatoshis
+const transactions = await wallet.getTransactions() // Returns all transactions
+```
+
 ## To - do
 
 - [x] Project startup (Linters, Typescript, Dependencies)
@@ -32,12 +55,6 @@ SDK for LaWallet
   - [ ] Watch transactions
   - [ ] Create event filter
   - [ ] get Transaction (txId)
-
-## Installation
-
-```bash
-pnpm add @lawallet/sdk
-```
 
 ## Documentation
 
