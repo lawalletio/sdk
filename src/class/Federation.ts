@@ -1,5 +1,5 @@
-import { createFederationConfig } from '../lib/createFederationConfig.js';
-import type { CreateFederationConfigParams, FederationConfig, ModulePubkeysConfigType } from '../types/Federation.js';
+import { createFederationConfig } from '../lib/createFederationConfig';
+import type { CreateFederationConfigParams, FederationConfig, ModulePubkeysConfigType } from '../types/Federation';
 
 export class Federation {
   private _config: FederationConfig;

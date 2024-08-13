@@ -1,5 +1,5 @@
-import { LAWALLET_DEFAULT_CONFIG } from '../constants/config.js';
-import type { CreateFederationConfigParams, FederationConfig } from '../types/Federation.js';
+import { LAWALLET_DEFAULT_CONFIG } from '../constants/config';
+import type { CreateFederationConfigParams, FederationConfig } from '../types/Federation';
 
 export function createFederationConfig(parameters: CreateFederationConfigParams = {}): FederationConfig {
   return {

@@ -43,17 +43,34 @@ export function hexToUint8Array(hex: string): Uint8Array {
   return uint8Array;
 }
 
-export async function createNDKInstance(
-  relaysList: string[],
-  autoConnect: boolean = false,
-  signer?: NDKSigner,
-): Promise<NDK> {
+export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK {
   const tmpNDK = new NDK({
     explicitRelayUrls: relaysList,
     signer,
   });
 
-  if (autoConnect) await tmpNDK.connect();
-
   return tmpNDK;
+}
+
+export async function checkRelaysConnection(ndk: NDK) {
+  if (ndk.pool.urls().length === 0) throw new Error('No relays found');
+
+  let connectedRelays: number = ndk.pool.connectedRelays().length;
+
+  if (connectedRelays === 0) {
+    await ndk.connect();
+    return true;
+  }
+
+  return false;
+}
+
+export function disconnectRelays(ndk: NDK) {
+  const relays = ndk.pool.connectedRelays();
+  relays.map((relay) => relay.disconnect());
+
+  ndk.pool.removeAllListeners();
+  ndk.removeAllListeners();
+
+  return;
 }

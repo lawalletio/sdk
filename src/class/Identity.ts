@@ -1,20 +1,31 @@
 import { LightningAddress } from '@getalby/lightning-tools';
 import NDK, { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { nip19 } from 'nostr-tools';
-import { createNDKInstance, getUsername, parseWalias } from '../lib/utils.js';
-import type { CreateFederationConfigParams } from '../types/Federation.js';
-import { Federation } from './Federation.js';
+import { checkRelaysConnection, createNDKInstance, disconnectRelays, getUsername, parseWalias } from '../lib/utils';
+import type { CreateFederationConfigParams } from '../types/Federation';
+import { Federation } from './Federation';
+
+type FetchParameters = {
+  enabled: boolean;
+  onFetch?: (data: any) => void;
+};
+
+const DEFAULT_FETCH_PARAMS: FetchParameters = {
+  enabled: false,
+};
 
 type IdentityConstructorParameters = {
   pubkey: string;
   federationConfig?: CreateFederationConfigParams;
-  onFetch?: (data: any) => void;
+  ndk?: NDK;
+  fetchParams?: FetchParameters;
 };
 
 export class Identity {
   private _federation: Federation;
   private _pubkey: string;
   private _username: string = '';
+  private _ndk: NDK;
 
   private _ln: LightningAddress | undefined;
   private _nostrProfile: NDKUserProfile | undefined;
@@ -25,30 +36,41 @@ export class Identity {
     this._federation = new Federation(params.federationConfig);
     this._pubkey = params.pubkey;
 
-    this.fetch().then((response) => {
-      if (params.onFetch) params.onFetch(response);
-    });
+    this._ndk = params.ndk ?? createNDKInstance(this._federation.relaysList);
+
+    const { fetchParams = DEFAULT_FETCH_PARAMS } = params;
+    if (fetchParams.enabled)
+      this.fetch().then((response) => {
+        if (fetchParams.onFetch) fetchParams.onFetch(response);
+      });
   }
 
   async fetchProfile(ndk?: NDK) {
-    ndk ??= await createNDKInstance(this._federation.relaysList, true);
+    ndk ??= this._ndk;
     if (!ndk) throw new Error('No NDK instance found');
 
-    let user = new NDKUser({ pubkey: this.pubkey });
-    user.ndk = ndk;
-
     try {
-      let profile = await user.fetchProfile();
+      let openNewConnection: boolean = await checkRelaysConnection(ndk);
+
+      let user = new NDKUser({ pubkey: this.pubkey });
+      user.ndk = ndk;
+
+      let profile = await user.fetchProfile({ closeOnEose: true });
+      if (openNewConnection) disconnectRelays(ndk);
+
       if (!profile) return;
 
       this._nostrProfile = profile;
       return profile;
-    } catch {
+    } catch (err) {
       return;
     }
   }
 
-  async fetch() {
+  async fetch(ndk?: NDK) {
+    ndk ??= this._ndk;
+    let profile = await this.fetchProfile(ndk);
+
     try {
       const username: string = await getUsername(this._pubkey, this._federation.lightningDomain);
       if (!username.length)
@@ -61,15 +83,15 @@ export class Identity {
 
       this._ln = ln;
 
-      let profile = await this.fetchProfile();
-
       return {
-        walias: this.walias,
         ln,
         profile,
       };
     } catch (err) {
-      return;
+      return {
+        ln: undefined,
+        profile,
+      };
     }
   }
 
@@ -94,7 +116,7 @@ export class Identity {
     return this._ln;
   }
 
-  get profile() {
+  get nostr() {
     return this._nostrProfile;
   }
 }

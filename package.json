@@ -10,7 +10,6 @@
   },
   "scripts": {
     "dev": "pnpm run build:esm+types --watch",
-    "test": "echo \"Error: no test specified\" && exit 0",
     "build": "pnpm run build:esm+types",
     "build:esm+types": "tsc --project ./etc/tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
     "clean": "rm -rf dist && rm -rf node_modules",
@@ -25,11 +24,13 @@
     "@lacrypta/typescript-config": "^1.0.0",
     "@noble/secp256k1": "^2.0.0",
     "@scure/base": "1.1.5",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.17",
     "@typescript-eslint/eslint-plugin": "^8.0.1",
     "eslint": "9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "ws": "^8.18.0"
   },

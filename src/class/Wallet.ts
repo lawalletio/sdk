@@ -1,9 +1,9 @@
 import { NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey } from 'nostr-tools';
-import { hexToUint8Array } from '../lib/utils.js';
-import type { CreateFederationConfigParams } from '../types/Federation.js';
-import { Transaction } from '../types/Transaction.js';
-import { Identity } from './Identity.js';
+import { hexToUint8Array } from '../lib/utils';
+import type { CreateFederationConfigParams } from '../types/Federation';
+import { Transaction } from '../types/Transaction';
+import { Identity } from './Identity';
 
 type WalletParameters = {
   federationConfig?: CreateFederationConfigParams;

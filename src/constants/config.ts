@@ -1,4 +1,4 @@
-import type { FederationConfig } from '../types/Federation.js';
+import type { FederationConfig } from '../types/Federation';
 
 export const LAWALLET_DEFAULT_CONFIG: FederationConfig = {
   federationId: 'lawallet.ar',
