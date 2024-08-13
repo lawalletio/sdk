@@ -1,8 +1,4 @@
-export enum LaWalletKinds {
-  REGULAR = 1112,
-  EPHEMERAL = 21111,
-  PARAMETRIZED_REPLACEABLE = 31111,
-}
+import { NDKTag } from '@nostr-dev-kit/ndk';
 
 export const nowInSeconds = (): number => {
   return Math.floor(Date.now() / 1000);
@@ -40,4 +36,32 @@ export function uint8ArrayToHex(uint8Array: Uint8Array): string {
   return Array.from(uint8Array)
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
+}
+
+export const getTagValue = (tags: NDKTag[], keyTag: string): string => {
+  const tag: NDKTag | undefined = tags.find((tag) => tag[0] === keyTag);
+  return tag ? tag[1]! : '';
+};
+
+export const getTag = (tags: NDKTag[], keyTag: string): NDKTag | undefined => {
+  const tagValue = tags.find((tag) => tag[0] === keyTag);
+  return tagValue;
+};
+
+export const getMultipleTagsValues = (tags: NDKTag[], keyTag: string) => {
+  const values: string[] = [];
+
+  const tagsValue: NDKTag[] = tags.filter((tag) => tag[0] === keyTag);
+  tagsValue.forEach((tag) => values.push(tag[1]!));
+
+  return values;
+};
+
+export function parseContent(content: string) {
+  try {
+    const parsed = JSON.parse(content);
+    return parsed;
+  } catch {
+    return {};
+  }
 }

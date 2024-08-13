@@ -1,4 +1,7 @@
-import NDK, { NDKSigner } from '@nostr-dev-kit/ndk';
+import NDK, { NDKFilter, NDKKind, NDKSigner } from '@nostr-dev-kit/ndk';
+import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
+import { startTags, statusTags } from '../constants/tags';
+import { ModulePubkeysConfigType } from '../types/Federation';
 
 export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK {
   const tmpNDK = new NDK({
@@ -39,4 +42,32 @@ export async function fetchToNDK<T>(ndk: NDK, fn: () => Promise<T>) {
   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
 
   return response;
+}
+
+export function buildTransactionsFilters(
+  pubkey: string,
+  modulePubkeys: ModulePubkeysConfigType,
+  filters: Partial<NDKFilter>,
+) {
+  return [
+    {
+      authors: [pubkey],
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      '#t': [LaWalletTags.INTERNAL_TRANSACTION_START],
+      ...filters,
+    },
+    {
+      '#p': [pubkey],
+      '#t': startTags,
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      ...filters,
+    },
+    {
+      authors: [modulePubkeys.ledger],
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      '#p': [pubkey],
+      '#t': statusTags,
+      ...filters,
+    },
+  ];
 }

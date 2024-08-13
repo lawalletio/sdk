@@ -14,7 +14,7 @@ SDK for LaWallet
   - [x] Signer + Identity
   - [ ] Wallet Information
     - [x] getBalance
-    - [ ] getTransactions
+    - [x] getTransactions
     - [ ] getCards
   - [ ] onReceiveTransaction()
   - [ ] createInvoice / createZap
@@ -26,7 +26,7 @@ SDK for LaWallet
   - [ ] registerHandle (request + payment + claim)
 - [ ] Client
   - [ ] Multiples accounts
-    - [ ] accounts  
+    - [ ] accounts
     - [ ] addAccount
     - [ ] removeAccount
   - [ ] Watch transactions

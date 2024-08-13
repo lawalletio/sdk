@@ -1,11 +1,13 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import { createNDKInstance, fetchToNDK } from '../lib/ndk';
-import { hexToUint8Array, LaWalletKinds, nowInSeconds } from '../lib/utils';
+import { buildTransactionsFilters, createNDKInstance, fetchToNDK } from '../lib/ndk';
+import { hexToUint8Array, nowInSeconds } from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
-import { Transaction } from '../types/Transaction';
 import { Federation } from './Federation';
 import { FetchParameters, Identity } from './Identity';
+import { LaWalletKinds } from '../constants/nostr';
+import { parseTransactions } from '../lib/transactions';
+import { Transaction } from '../types/Transaction';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -44,13 +46,14 @@ export class Wallet extends Identity {
   async getBalance(tokenId: string): Promise<number> {
     if (!this.ndk) throw new Error('No NDK instance found');
 
-    const event = await fetchToNDK<NDKEvent | null>(this.ndk, () =>
+    const fnFetch = () =>
       this.ndk.fetchEvent({
         authors: [this.federation.modulePubkeys.ledger],
         kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE as unknown as NDKKind],
         '#d': [`balance:${tokenId}:${this.pubkey}`],
-      }),
-    );
+      });
+
+    const event = await fetchToNDK<NDKEvent | null>(this.ndk, fnFetch);
 
     if (!event) {
       return 0;
@@ -59,8 +62,19 @@ export class Wallet extends Identity {
     return Number(event.getMatchingTags('amount')[0]?.[1]);
   }
 
-  getTransactions(): Transaction[] {
-    return [];
+  async getTransactions(): Promise<Transaction[]> {
+    if (!this.ndk) throw new Error('No NDK instance found');
+
+    const fnFetch = () => {
+      let filters = buildTransactionsFilters(this.pubkey, this.federation.modulePubkeys, { limit: 5000 });
+
+      return this.ndk.fetchEvents(filters, {
+        closeOnEose: true,
+      });
+    };
+
+    const transactionEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);
+    return parseTransactions(this.pubkey, this.federation.modulePubkeys, Array.from(transactionEvents));
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
