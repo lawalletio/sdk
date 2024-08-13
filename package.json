@@ -21,12 +21,7 @@
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.9.0",
-    "@lacrypta/typescript-config": "^1.0.0",
-    "@noble/secp256k1": "^2.0.0",
-    "@scure/base": "1.1.5",
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.17",
-    "@typescript-eslint/eslint-plugin": "^8.0.1",
     "eslint": "9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
@@ -35,9 +30,7 @@
     "ws": "^8.18.0"
   },
   "dependencies": {
-    "@getalby/lightning-tools": "^5.0.3",
     "@nostr-dev-kit/ndk": "2.4.0",
-    "date-fns": "^3.6.0",
     "nostr-tools": "^2.7.2"
   },
   "sideEffects": false,
