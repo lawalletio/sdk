@@ -1,13 +1,6 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import {
-  checkRelaysConnection,
-  createNDKInstance,
-  disconnectRelays,
-  hexToUint8Array,
-  LaWalletKinds,
-  nowInSeconds,
-} from '../lib/utils';
+import { createNDKInstance, fetchToNDK, hexToUint8Array, LaWalletKinds, nowInSeconds } from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Transaction } from '../types/Transaction';
 import { FetchParameters, Identity } from './Identity';
@@ -50,15 +43,13 @@ export class Wallet extends Identity {
   async getBalance(tokenId: string): Promise<number> {
     if (!this.ndk) throw new Error('No NDK instance found');
 
-    let openNewConnection: boolean = await checkRelaysConnection(this.ndk);
-
-    const event = await this.ndk.fetchEvent({
-      authors: [this.federation.modulePubkeys.ledger],
-      kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE as unknown as NDKKind],
-      '#d': [`balance:${tokenId}:${this.pubkey}`],
-    });
-
-    if (openNewConnection) disconnectRelays(this.ndk);
+    const event = await fetchToNDK<NDKEvent | null>(this.ndk, () =>
+      this.ndk.fetchEvent({
+        authors: [this.federation.modulePubkeys.ledger],
+        kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE as unknown as NDKKind],
+        '#d': [`balance:${tokenId}:${this.pubkey}`],
+      }),
+    );
 
     if (!event) {
       return 0;

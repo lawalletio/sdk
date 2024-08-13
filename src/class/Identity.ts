@@ -1,7 +1,6 @@
 import NDK, { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { nip19 } from 'nostr-tools';
-import { checkRelaysConnection, createNDKInstance, disconnectRelays, parseWalias } from '../lib/utils';
-import type { CreateFederationConfigParams } from '../types/Federation';
+import { createNDKInstance, fetchToNDK, parseWalias } from '../lib/utils';
 import { Federation } from './Federation';
 import { LNRequestResponse } from '../types/LnUrl';
 
@@ -49,14 +48,10 @@ export class Identity {
     if (!this._ndk) throw new Error('No NDK instance found');
 
     try {
-      let openNewConnection: boolean = await checkRelaysConnection(this._ndk);
-
       let user = new NDKUser({ pubkey: this.pubkey });
       user.ndk = this._ndk;
 
-      let profile = await user.fetchProfile({ closeOnEose: true });
-      if (openNewConnection) disconnectRelays(this._ndk);
-
+      let profile = await fetchToNDK<NDKUserProfile | null>(this.ndk, () => user.fetchProfile({ closeOnEose: true }));
       if (!profile) return;
 
       this._nostrProfile = profile;
