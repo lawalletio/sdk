@@ -1,5 +1,11 @@
 import NDK, { NDKSigner } from '@nostr-dev-kit/ndk';
 
+export enum LaWalletKinds {
+  REGULAR = 1112,
+  EPHEMERAL = 21111,
+  PARAMETRIZED_REPLACEABLE = 31111,
+}
+
 export const normalizeLightningDomain = (lightningDomain: string) => {
   try {
     const iURL = new URL(lightningDomain);

@@ -108,11 +108,19 @@ export class Identity {
     return parseWalias(this._username, this._federation.lightningDomain);
   }
 
+  get federation() {
+    return this._federation;
+  }
+
   get lnurlpData() {
     return this._ln;
   }
 
   get nostr() {
     return this._nostrProfile;
+  }
+
+  get ndk() {
+    return this._ndk;
   }
 }
