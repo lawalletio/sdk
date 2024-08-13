@@ -11,8 +11,13 @@ SDK for LaWallet
   - [x] Lightning Info
   - [x] Nostr Profile
 - [ ] Wallet
-  - [ ] wallet info (identity, balance, transactions)
-  - [ ] createInvoice
+  - [x] Signer + Identity
+  - [ ] Wallet Information
+    - [x] getBalance
+    - [ ] getTransactions
+    - [ ] getCards
+  - [ ] onReceiveTransaction()
+  - [ ] createInvoice / createZap
   - [ ] signEvent
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
