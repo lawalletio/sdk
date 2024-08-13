@@ -18,7 +18,7 @@ SDK for LaWallet
     - [ ] getCards
   - [ ] onReceiveTransaction()
   - [ ] createInvoice / createZap
-  - [ ] signEvent
+  - [x] signEvent
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
 - [ ] Client
