@@ -1,8 +1,9 @@
 import NDK, { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { nip19 } from 'nostr-tools';
-import { createNDKInstance, fetchToNDK, parseWalias } from '../lib/utils';
-import { Federation } from './Federation';
+import { createNDKInstance, fetchToNDK } from '../lib/ndk';
+import { parseWalias } from '../lib/utils';
 import { LNRequestResponse } from '../types/LnUrl';
+import { Federation } from './Federation';
 
 export type FetchParameters = {
   enabled: boolean;

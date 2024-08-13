@@ -1,10 +1,11 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import { createNDKInstance, fetchToNDK, hexToUint8Array, LaWalletKinds, nowInSeconds } from '../lib/utils';
+import { createNDKInstance, fetchToNDK } from '../lib/ndk';
+import { hexToUint8Array, LaWalletKinds, nowInSeconds } from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Transaction } from '../types/Transaction';
-import { FetchParameters, Identity } from './Identity';
 import { Federation } from './Federation';
+import { FetchParameters, Identity } from './Identity';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
