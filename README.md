@@ -23,6 +23,7 @@ SDK for LaWallet
   - [ ] sendTransaction
     - [ ] onSuccess()
     - [ ] onError()
+  - [ ] registerHandle (request + payment + claim)
 - [ ] Client
   - [ ] Multiples accounts
     - [ ] accounts  
