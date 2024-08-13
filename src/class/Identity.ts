@@ -85,7 +85,7 @@ export class Identity {
       };
     } catch (err) {
       return {
-        lnurlpData: err ? { error: (err as Error).message } : undefined,
+        lnurlpData: this._federation.generateLUD06(this._pubkey),
         profile,
       };
     }

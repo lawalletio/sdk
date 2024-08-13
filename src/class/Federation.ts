@@ -30,6 +30,27 @@ export class Federation {
     return this._config.relaysList;
   }
 
+  generateLUD06(pubkey: string) {
+    return {
+      status: 'OK',
+      tag: 'payRequest',
+      commentAllowed: 255,
+      callback: `${this.apiGateway}/lnurlp/${pubkey}/callback`,
+      metadata: '[["text/plain", "lawallet"]]',
+      minSendable: 1000,
+      maxSendable: 10000000000,
+      payerData: {
+        name: { mandatory: false },
+        email: { mandatory: false },
+        pubkey: { mandatory: false },
+      },
+      nostrPubkey: this.modulePubkeys.urlx,
+      allowsNostr: true,
+      federationId: this.id,
+      accountPubKey: pubkey,
+    };
+  }
+
   async getUsername(pubkey: string): Promise<string> {
     const api = Api();
     const request: { username: string } = await api.get(`${this.lightningDomain}/api/pubkey/${pubkey}`);
