@@ -23,9 +23,12 @@ SDK for LaWallet
   - [ ] sendTransaction
 - [ ] Client
   - [ ] Multiples accounts
+    - [ ] accounts  
+    - [ ] addAccount
+    - [ ] removeAccount
   - [ ] Watch transactions
   - [ ] Create event filter
-  - [ ] get transaction (txId)
+  - [ ] get Transaction (txId)
 
 ## Installation
 
