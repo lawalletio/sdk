@@ -28,6 +28,12 @@ export function hexToUint8Array(hex: string): Uint8Array {
   return uint8Array;
 }
 
+export function uint8ArrayToHex(uint8Array: Uint8Array): string {
+  return Array.from(uint8Array)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK {
   const tmpNDK = new NDK({
     explicitRelayUrls: relaysList,

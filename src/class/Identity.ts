@@ -5,7 +5,7 @@ import type { CreateFederationConfigParams } from '../types/Federation';
 import { Federation } from './Federation';
 import { LNRequestResponse } from '../types/LnUrl';
 
-type FetchParameters = {
+export type FetchParameters = {
   enabled: boolean;
   onFetch?: (data: any) => void;
 };
@@ -16,8 +16,8 @@ const DEFAULT_FETCH_PARAMS: FetchParameters = {
 
 type IdentityConstructorParameters = {
   pubkey: string;
-  federationConfig?: CreateFederationConfigParams;
   ndk?: NDK;
+  federationConfig?: CreateFederationConfigParams;
   fetchParams?: FetchParameters;
 };
 
@@ -85,7 +85,7 @@ export class Identity {
       };
     } catch (err) {
       return {
-        lnurlpData: undefined,
+        lnurlpData: err ? { error: (err as Error).message } : undefined,
         profile,
       };
     }
