@@ -5,9 +5,11 @@ import { LNRequestResponse } from '../types/LnUrl';
 
 export class Federation {
   private _config: FederationConfig;
+  private _api: Api;
 
   constructor(federationConfig?: CreateFederationConfigParams) {
     this._config = createFederationConfig(federationConfig);
+    this._api = Api();
   }
 
   get id(): string {
@@ -52,16 +54,14 @@ export class Federation {
   }
 
   async getUsername(pubkey: string): Promise<string> {
-    const api = Api();
-    const request: { username: string } = await api.get(`${this.lightningDomain}/api/pubkey/${pubkey}`);
+    const request: { username: string } = await this._api.get(`${this.lightningDomain}/api/pubkey/${pubkey}`);
     if (!request || !request.username) return '';
 
     return request.username;
   }
 
   async getLnUrlpData(username: string): Promise<LNRequestResponse | undefined> {
-    const api = Api();
-    const lnurlpData: LNRequestResponse | undefined = await api.get(
+    const lnurlpData: LNRequestResponse | undefined = await this._api.get(
       `${this.lightningDomain}/.well-known/lnurlp/${username}`,
     );
 

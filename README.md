@@ -15,14 +15,14 @@ pnpm add @lawallet/sdk @nostr-dev-kit/ndk
 ## Usage
 
 ```ts
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk'
-import { Wallet } from '@lawallet/sdk'
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
+import { Wallet } from '@lawallet/sdk';
 
-const signer = NDKPrivateKeySigner.generate()
+const signer = NDKPrivateKeySigner.generate();
 const wallet = new Wallet({ signer });
 
-const balance = await wallet.getBalance("BTC"); // Returns BTC balance in millisatoshis
-const transactions = await wallet.getTransactions() // Returns all transactions
+const balance = await wallet.getBalance('BTC'); // Returns BTC balance in millisatoshis
+const transactions = await wallet.getTransactions(); // Returns all transactions
 ```
 
 ## To - do
@@ -39,9 +39,8 @@ const transactions = await wallet.getTransactions() // Returns all transactions
     - [x] getBalance
     - [x] getTransactions
     - [ ] getCards
-  - [ ] onReceiveTransaction()
-  - [ ] createInvoice / createZap
   - [x] signEvent
+  - [ ] createInvoice / createZap
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
     - [ ] onSuccess()
@@ -55,7 +54,3 @@ const transactions = await wallet.getTransactions() // Returns all transactions
   - [ ] Watch transactions
   - [ ] Create event filter
   - [ ] get Transaction (txId)
-
-## Documentation
-
-For documentation and guides, visit [sdk.lawallet.io](https://sdk.lawallet.io).

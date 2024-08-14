@@ -3,6 +3,7 @@ import { statusTags } from '../constants/tags';
 import { getMultipleTagsValues, getTagValue, parseContent } from './utils';
 import { Transaction, TransactionDirection, TransactionStatus, TransactionType } from '../types/Transaction';
 import { ModulePubkeysConfigType } from '../types/Federation';
+import { Wallet } from '../exports';
 
 type EventWithStatus = {
   startEvent: NDKEvent | undefined;
@@ -166,18 +167,19 @@ async function fillTransaction(
   return tmpTransaction;
 }
 
-export async function parseTransactions(
-  userPubkey: string,
-  modulePubkeys: ModulePubkeysConfigType,
-  events: NDKEvent[],
-) {
+export async function parseTransactions(wallet: Wallet, events: NDKEvent[]) {
   const transactions: Transaction[] = [];
   const [startedEvents, statusEvents, refundEvents] = filterEventsByTxType(events);
 
   await Promise.all(
     startedEvents!.map(async (startEvent) => {
       const [startWithStatus, refundWithStatus] = parseStatusEvents(startEvent, statusEvents, refundEvents);
-      const transaction = await fillTransaction(userPubkey, modulePubkeys, startWithStatus!, refundWithStatus!);
+      const transaction = await fillTransaction(
+        wallet.pubkey,
+        wallet.federation.modulePubkeys,
+        startWithStatus!,
+        refundWithStatus!,
+      );
       if (transaction) transactions.push(transaction);
     }),
   );

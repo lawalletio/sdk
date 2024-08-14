@@ -1,11 +1,11 @@
-export interface IUseFetch {
+export interface Api {
   get: (endpoint: string, options?: Record<string, any>) => Promise<any>;
   post: (endpoint: string, options?: Record<string, any>) => Promise<any>;
   put: (endpoint: string, options?: Record<string, any>) => Promise<any>;
   del: (endpoint: string, options?: Record<string, any>) => Promise<any>;
 }
 
-export const Api = (): IUseFetch => {
+export const Api = () => {
   const customFetch = (endpoint: string, options: Record<string, any> = {}): Promise<any> => {
     const defaultHeader = {
       // accept: "application/json",

@@ -74,7 +74,7 @@ export class Wallet extends Identity {
     };
 
     const transactionEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);
-    return parseTransactions(this.pubkey, this.federation.modulePubkeys, Array.from(transactionEvents));
+    return parseTransactions(this, Array.from(transactionEvents));
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
