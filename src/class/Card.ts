@@ -2,23 +2,31 @@ import { Wallet } from '../exports';
 import { createCardConfigEvent } from '../lib/cards';
 import type { Limit, CardPayload, Design } from '../types/Card';
 
-export class Card {
-  private _wallet: Wallet;
+interface CardData {
   uuid: string;
   design: Design;
   name: string;
   description: string;
   status: boolean;
   limits: Limit[];
+}
+
+export class Card {
+  private _wallet: Wallet;
+  private _cardData: CardData;
 
   constructor(wallet: Wallet, uuid: string, cardDesign: Design, cardConfig: CardPayload) {
+    const { name, description, status, limits } = cardConfig;
     this._wallet = wallet;
-    this.uuid = uuid;
-    this.design = cardDesign;
-    this.name = cardConfig.name;
-    this.description = cardConfig.description;
-    this.status = Boolean(cardConfig.status === 'ENABLED');
-    this.limits = cardConfig.limits;
+
+    this._cardData = {
+      uuid,
+      design: cardDesign,
+      name,
+      description,
+      status: Boolean(cardConfig.status === 'ENABLED'),
+      limits: cardConfig.limits,
+    };
   }
 
   async enable() {
@@ -53,11 +61,36 @@ export class Card {
     return this.enable;
   }
 
-  getLimits(): Limit[] {
-    return this.limits;
-  }
-
   get wallet() {
     return this._wallet;
+  }
+
+  get uuid() {
+    return this._cardData.uuid;
+  }
+
+  get design() {
+    return this._cardData.design;
+  }
+
+  get name() {
+    return this._cardData.name;
+  }
+
+  get description() {
+    return this._cardData.description;
+  }
+
+  get status() {
+    return this._cardData.status;
+  }
+
+  set status(new_status: boolean) {
+    this._cardData.status = new_status;
+  }
+
+  get limits(): Limit[] {
+    if (!this._cardData.limits) return [];
+    return this._cardData.limits;
   }
 }
