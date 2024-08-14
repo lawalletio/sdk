@@ -1,3 +1,4 @@
+import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { Api } from '../lib/api';
 import { createFederationConfig } from '../lib/createFederationConfig';
 import type { CreateFederationConfigParams, FederationConfig, ModulePubkeysConfigType } from '../types/Federation';
@@ -32,7 +33,8 @@ export class Federation {
     return this._config.relaysList;
   }
 
-  generateLUD06(pubkey: string) {
+  getLUD06(pubkey: string) {
+    // return this._api.get(`${this.lightningDomain}/api/lud06/${pubkey}`);
     return {
       status: 'OK',
       tag: 'payRequest',
@@ -51,6 +53,11 @@ export class Federation {
       federationId: this.id,
       accountPubKey: pubkey,
     };
+  }
+
+  async httpPublish(event: NostrEvent) {
+    const res = await this._api.post(`${this.apiGateway}/nostr/publish`, { body: JSON.stringify(event) }, false);
+    return res.status === 200 || res.status === 202;
   }
 
   async getUsername(pubkey: string): Promise<string> {

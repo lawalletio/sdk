@@ -1,12 +1,16 @@
 export interface Api {
   get: (endpoint: string, options?: Record<string, any>) => Promise<any>;
-  post: (endpoint: string, options?: Record<string, any>) => Promise<any>;
-  put: (endpoint: string, options?: Record<string, any>) => Promise<any>;
-  del: (endpoint: string, options?: Record<string, any>) => Promise<any>;
+  post: (endpoint: string, options?: Record<string, any>, formatJSONResponse?: boolean) => Promise<any>;
+  put: (endpoint: string, options?: Record<string, any>, formatJSONResponse?: boolean) => Promise<any>;
+  del: (endpoint: string, options?: Record<string, any>, formatJSONResponse?: boolean) => Promise<any>;
 }
 
 export const Api = () => {
-  const customFetch = (endpoint: string, options: Record<string, any> = {}): Promise<any> => {
+  const customFetch = (
+    endpoint: string,
+    options: Record<string, any> = {},
+    formatJSONResponse: boolean = true,
+  ): Promise<any> => {
     const defaultHeader = {
       // accept: "application/json",
       'Content-Type': 'application/json',
@@ -22,6 +26,8 @@ export const Api = () => {
 
     return fetch(endpoint, options)
       .then((res) => {
+        if (!formatJSONResponse) return res;
+
         return res.json().then((responseJSON) => {
           if (!responseJSON) {
             return Promise.reject({
@@ -41,19 +47,19 @@ export const Api = () => {
 
   const get = (url: string, options: Record<string, any> = {}): Promise<any> => customFetch(url, options);
 
-  const post = (url: string, options: Record<string, any> = {}): Promise<any> => {
+  const post = (url: string, options: Record<string, any> = {}, formatJSONResponse: boolean = true): Promise<any> => {
     options.method = 'POST';
-    return customFetch(url, options);
+    return customFetch(url, options, formatJSONResponse);
   };
 
-  const put = (url: string, options: Record<string, any> = {}): Promise<any> => {
+  const put = (url: string, options: Record<string, any> = {}, formatJSONResponse: boolean = true): Promise<any> => {
     options.method = 'PUT';
-    return customFetch(url, options);
+    return customFetch(url, options, formatJSONResponse);
   };
 
-  const del = (url: string, options: Record<string, any> = {}): Promise<any> => {
+  const del = (url: string, options: Record<string, any> = {}, formatJSONResponse: boolean = true): Promise<any> => {
     options.method = 'DELETE';
-    return customFetch(url, options);
+    return customFetch(url, options, formatJSONResponse);
   };
 
   return {

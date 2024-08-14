@@ -1,14 +1,43 @@
-import { NDKEvent, NostrEvent } from '@nostr-dev-kit/ndk';
-import { statusTags } from '../constants/tags';
-import { getMultipleTagsValues, getTagValue, parseContent } from './utils';
-import { Transaction, TransactionDirection, TransactionStatus, TransactionType } from '../types/Transaction';
-import { ModulePubkeysConfigType } from '../types/Federation';
+import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
+import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
+import { startTags, statusTags } from '../constants/tags';
 import { Wallet } from '../exports';
+import { ModulePubkeysConfigType } from '../types/Federation';
+import { Transaction, TransactionDirection, TransactionStatus, TransactionType } from '../types/Transaction';
+import { getMultipleTagsValues, getTagValue, parseContent } from './utils';
 
 type EventWithStatus = {
   startEvent: NDKEvent | undefined;
   statusEvent: NDKEvent | undefined;
 };
+
+export function transactionsFilters(
+  pubkey: string,
+  modulePubkeys: ModulePubkeysConfigType,
+  filters: Partial<NDKFilter>,
+) {
+  return [
+    {
+      authors: [pubkey],
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      '#t': [LaWalletTags.INTERNAL_TRANSACTION_START],
+      ...filters,
+    },
+    {
+      '#p': [pubkey],
+      '#t': startTags,
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      ...filters,
+    },
+    {
+      authors: [modulePubkeys.ledger],
+      kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+      '#p': [pubkey],
+      '#t': statusTags,
+      ...filters,
+    },
+  ];
+}
 
 function findAsocciatedEvent(events: NDKEvent[], eventId: string) {
   return events.find((event) => {
@@ -79,22 +108,23 @@ function parseStatusEvents(
   return [startWithStatus, refundWithStatus];
 }
 
-async function formatStartTransaction(userPubkey: string, modulePubkeys: ModulePubkeysConfigType, event: NDKEvent) {
+async function formatStartTransaction(wallet: Wallet, event: NDKEvent) {
   const nostrEvent: NostrEvent = await event.toNostrEvent();
-  const AuthorIsCard: boolean = event.pubkey === modulePubkeys.card;
+  const AuthorIsCard: boolean = event.pubkey === wallet.federation.modulePubkeys.card;
 
   //   const DelegatorIsUser: boolean = AuthorIsCard && nip26.getDelegator(nostrEvent as Event) === pubkey;
-  const AuthorIsUser: boolean = event.pubkey === userPubkey;
+  const AuthorIsUser: boolean = event.pubkey === wallet.pubkey;
 
   if (AuthorIsCard) {
     const delegation_pTags: string[] = getMultipleTagsValues(event.tags, 'p');
-    if (!delegation_pTags.includes(userPubkey)) return;
+    if (!delegation_pTags.includes(wallet.pubkey)) return;
   }
 
   const direction = AuthorIsUser ? TransactionDirection.OUTGOING : TransactionDirection.INCOMING;
 
   const eventContent = parseContent(event.content);
-  //   const metadata = await extractMetadata(nostrEvent, direction);
+  // TO-DO exctract metadata with signer
+  // const metadata = await extractMetadata(nostrEvent, direction);
 
   let newTransaction: Transaction = {
     id: event.id!,
@@ -146,17 +176,8 @@ async function markTxRefund(transaction: Transaction, statusEvent: NDKEvent) {
   return transaction;
 }
 
-async function fillTransaction(
-  userPubkey: string,
-  modulePubkeys: ModulePubkeysConfigType,
-  txEvents: EventWithStatus,
-  refundEvents: EventWithStatus,
-) {
-  let tmpTransaction: Transaction | undefined = await formatStartTransaction(
-    userPubkey,
-    modulePubkeys,
-    txEvents.startEvent!,
-  );
+async function fillTransaction(wallet: Wallet, txEvents: EventWithStatus, refundEvents: EventWithStatus) {
+  let tmpTransaction: Transaction | undefined = await formatStartTransaction(wallet, txEvents.startEvent!);
   if (!tmpTransaction) return;
 
   if (txEvents.statusEvent) tmpTransaction = await updateTxStatus(tmpTransaction, txEvents.statusEvent);
@@ -174,12 +195,8 @@ export async function parseTransactionsEvents(wallet: Wallet, events: NDKEvent[]
   await Promise.all(
     startedEvents!.map(async (startEvent) => {
       const [startWithStatus, refundWithStatus] = parseStatusEvents(startEvent, statusEvents, refundEvents);
-      const transaction = await fillTransaction(
-        wallet.pubkey,
-        wallet.federation.modulePubkeys,
-        startWithStatus!,
-        refundWithStatus!,
-      );
+      const transaction = await fillTransaction(wallet, startWithStatus!, refundWithStatus!);
+
       if (transaction) transactions.push(transaction);
     }),
   );

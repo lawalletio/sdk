@@ -1,14 +1,16 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import { cardsFilter, createNDKInstance, fetchToNDK, transactionsFilters } from '../lib/ndk';
+import { LaWalletKinds } from '../constants/nostr';
+import { cardsFilter, parseCardsEvents } from '../lib/cards';
+import { createNDKInstance, fetchToNDK } from '../lib/ndk';
+import { parseTransactionsEvents, transactionsFilters } from '../lib/transactions';
 import { hexToUint8Array, nowInSeconds } from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
+import { Transaction } from '../types/Transaction';
 import { Federation } from './Federation';
 import { FetchParameters, Identity } from './Identity';
-import { LaWalletKinds } from '../constants/nostr';
-import { parseTransactionsEvents } from '../lib/transactions';
-import { Transaction } from '../types/Transaction';
-import { parseCardsEvents } from '../lib/cards';
+import { CardsInfo } from '../types/Card';
+import { Card } from './Card';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -90,7 +92,18 @@ export class Wallet extends Identity {
     };
 
     const cardsEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);
-    return parseCardsEvents(this, Array.from(cardsEvents));
+    const cardsInfo: CardsInfo = await parseCardsEvents(this, Array.from(cardsEvents));
+
+    let cards: Card[] = [];
+
+    for (const id in cardsInfo.data) {
+      let design = cardsInfo.data[id].design;
+      let cardConfig = cardsInfo.config.cards[id];
+
+      cards.push(new Card(this, id, design, cardConfig));
+    }
+
+    return cards;
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {

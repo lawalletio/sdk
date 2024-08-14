@@ -35,6 +35,13 @@ const cards = await wallet.getCards(); // Returns the information and configurat
   - [x] Pubkey info
   - [x] Lightning Info
   - [x] Nostr Profile
+- [ ] Card
+  - [x] info (design, name, description)
+  - [x] limits
+  - [x] enable/disable
+  - [ ] addLimit
+  - [ ] removeLimit
+  - [ ] replaceLimits
 - [ ] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information

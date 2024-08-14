@@ -81,7 +81,7 @@ export class Identity {
       };
     } catch (err) {
       return {
-        lnurlpData: this._federation.generateLUD06(this._pubkey),
+        lnurlpData: this._federation.getLUD06(this._pubkey),
         profile,
       };
     }
