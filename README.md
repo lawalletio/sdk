@@ -23,6 +23,8 @@ const wallet = new Wallet({ signer });
 
 const balance = await wallet.getBalance('BTC'); // Returns BTC balance in millisatoshis
 const transactions = await wallet.getTransactions(); // Returns all transactions
+
+const cards = await wallet.getCards(); // Returns the information and configuration of the wallet cards
 ```
 
 ## To - do
@@ -35,10 +37,10 @@ const transactions = await wallet.getTransactions(); // Returns all transactions
   - [x] Nostr Profile
 - [ ] Wallet
   - [x] Signer + Identity
-  - [ ] Wallet Information
+  - [x] Wallet Information
     - [x] getBalance
     - [x] getTransactions
-    - [ ] getCards
+    - [x] getCards
   - [x] signEvent
   - [ ] createInvoice / createZap
   - [ ] prepareTransaction (external / internal)

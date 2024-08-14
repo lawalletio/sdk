@@ -2,6 +2,7 @@ import NDK, { NDKFilter, NDKKind, NDKSigner } from '@nostr-dev-kit/ndk';
 import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
 import { startTags, statusTags } from '../constants/tags';
 import { ModulePubkeysConfigType } from '../types/Federation';
+import { ConfigTypes } from '../types/Card';
 
 export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK {
   const tmpNDK = new NDK({
@@ -44,7 +45,7 @@ export async function fetchToNDK<T>(ndk: NDK, fn: () => Promise<T>) {
   return response;
 }
 
-export function buildTransactionsFilters(
+export function transactionsFilters(
   pubkey: string,
   modulePubkeys: ModulePubkeysConfigType,
   filters: Partial<NDKFilter>,
@@ -68,6 +69,16 @@ export function buildTransactionsFilters(
       '#p': [pubkey],
       '#t': statusTags,
       ...filters,
+    },
+  ];
+}
+
+export function cardsFilter(pubkey: string, cardPubkey: string) {
+  return [
+    {
+      kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE.valueOf() as NDKKind],
+      '#d': [`${pubkey}:${ConfigTypes.DATA.valueOf()}`, `${pubkey}:${ConfigTypes.CONFIG.valueOf()}`],
+      authors: [cardPubkey],
     },
   ];
 }

@@ -167,7 +167,7 @@ async function fillTransaction(
   return tmpTransaction;
 }
 
-export async function parseTransactions(wallet: Wallet, events: NDKEvent[]) {
+export async function parseTransactionsEvents(wallet: Wallet, events: NDKEvent[]) {
   const transactions: Transaction[] = [];
   const [startedEvents, statusEvents, refundEvents] = filterEventsByTxType(events);
 

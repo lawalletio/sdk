@@ -1,13 +1,14 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import { buildTransactionsFilters, createNDKInstance, fetchToNDK } from '../lib/ndk';
+import { cardsFilter, createNDKInstance, fetchToNDK, transactionsFilters } from '../lib/ndk';
 import { hexToUint8Array, nowInSeconds } from '../lib/utils';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Federation } from './Federation';
 import { FetchParameters, Identity } from './Identity';
 import { LaWalletKinds } from '../constants/nostr';
-import { parseTransactions } from '../lib/transactions';
+import { parseTransactionsEvents } from '../lib/transactions';
 import { Transaction } from '../types/Transaction';
+import { parseCardsEvents } from '../lib/cards';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -66,7 +67,7 @@ export class Wallet extends Identity {
     if (!this.ndk) throw new Error('No NDK instance found');
 
     const fnFetch = () => {
-      let filters = buildTransactionsFilters(this.pubkey, this.federation.modulePubkeys, { limit: 5000 });
+      let filters = transactionsFilters(this.pubkey, this.federation.modulePubkeys, { limit: 5000 });
 
       return this.ndk.fetchEvents(filters, {
         closeOnEose: true,
@@ -74,7 +75,22 @@ export class Wallet extends Identity {
     };
 
     const transactionEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);
-    return parseTransactions(this, Array.from(transactionEvents));
+    return parseTransactionsEvents(this, Array.from(transactionEvents));
+  }
+
+  async getCards() {
+    if (!this.ndk) throw new Error('No NDK instance found');
+
+    const fnFetch = () => {
+      let filters = cardsFilter(this.pubkey, this.federation.modulePubkeys.card);
+
+      return this.ndk.fetchEvents(filters, {
+        closeOnEose: true,
+      });
+    };
+
+    const cardsEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);
+    return parseCardsEvents(this, Array.from(cardsEvents));
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
