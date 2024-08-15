@@ -1,18 +1,18 @@
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
-import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04';
+import { Card } from '../class/Card';
+import { LaWalletKinds } from '../constants/nostr';
 import { Wallet } from '../exports';
-import { getTagValue, parseContent } from './utils';
 import {
   CardConfigPayload,
   CardDataPayload,
+  CardLimitTypes,
   CardPayload,
   CardsInfo,
   CardStatus,
   ConfigTypes,
-  LimitTypes,
 } from '../types/Card';
-import { LaWalletKinds } from '../constants/nostr';
-import { Card } from '../class/Card';
+import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04';
+import { getTagValue, parseContent } from './utils';
 
 export function cardsFilter(pubkey: string, cardPubkey: string) {
   return [
@@ -96,7 +96,7 @@ export async function parseCardsEvents(wallet: Wallet, events: NDKEvent[]) {
   return cards;
 }
 
-export function calculateDelta(limitType: LimitTypes, limitTime: number): number {
+export function calculateDelta(limitType: CardLimitTypes, limitTime: number): number {
   if (limitType === 'transaction') return 0;
 
   if (limitTime <= 0) throw new Error(`You can't calculate the delta of ${limitTime} ${limitType}`);

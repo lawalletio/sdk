@@ -36,11 +36,13 @@ export type CardsInfo = {
   config: CardConfigPayload;
 };
 
-export type LimitTypes = 'transaction' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years';
+export type CardMetadataParams = { name: string; description: string };
 
-export type LimitParams = {
+export type CardLimitTypes = 'transaction' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years';
+
+export type CardLimitParams = {
   tokenId: string;
   limitAmount: number;
-  limitType: LimitTypes;
+  limitType: CardLimitTypes;
   limitTime?: number;
 };

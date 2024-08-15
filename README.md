@@ -52,6 +52,7 @@ wallet.getCards().then((cards) => {
   - [x] info (design, name, description)
   - [x] limits
   - [x] enable/disable
+  - [x] setMetadata
   - [x] addLimit
   - [x] restartLimits
   - [x] replaceLimits

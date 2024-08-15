@@ -1,6 +1,13 @@
 import { Wallet } from '../exports';
 import { calculateDelta, createCardConfigEvent } from '../lib/cards';
-import { CardStatus, LimitParams, type CardPayload, type Design, type Limit } from '../types/Card';
+import {
+  CardLimitParams,
+  CardMetadataParams,
+  CardStatus,
+  type CardPayload,
+  type Design,
+  type Limit,
+} from '../types/Card';
 
 interface CardData {
   uuid: string;
@@ -43,12 +50,22 @@ export class Card {
     return this.broadcastConfig(newCardData);
   }
 
+  async setMetadata(metadata: CardMetadataParams) {
+    let newCardData = {
+      ...this._cardData,
+      name: metadata.name ?? this._cardData.name,
+      description: metadata.description ?? this._cardData.description,
+    };
+
+    return this.broadcastConfig(newCardData);
+  }
+
   async replaceLimits(limits: Limit[]) {
     let newCardData = { ...this._cardData, limits };
     return this.broadcastConfig(newCardData);
   }
 
-  async addLimit(params: LimitParams) {
+  async addLimit(params: CardLimitParams) {
     const { tokenId, limitAmount, limitType, limitTime = 0 } = params;
 
     let name = `${limitType} limit`;
