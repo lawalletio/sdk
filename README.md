@@ -23,13 +23,13 @@ const wallet = new Wallet({ signer });
 
 // Returns BTC balance in millisatoshis
 wallet.getBalance('BTC').then((bal) => {
-  console.log(`Account BTC Balance: ${bal} satoshis`);
-})
+  console.log(`Account BTC Balance: ${bal} milisatoshis ~ ${(bal / 100000000).toFixed(8)} BTC`);
+});
 
 // Returns all transactions
 wallet.getTransactions().then((transactions) => {
-  console.log('Total account transactions: ', transactions.length)
-})
+  console.log('Total account transactions: ', transactions.length);
+});
 
 wallet.getCards().then(async (cards) => {
   if (cards.length) {
@@ -48,10 +48,10 @@ wallet.getCards().then(async (cards) => {
     });
 
     // Set card metadata (name, description)
-    await firstCard.setMetadata({ name: 'card name', description: 'card description' })
+    await firstCard.setMetadata({ name: 'card name', description: 'card description' });
 
     // Prepare the event to transfer the card
-    const transferEvent = await firstCard.createTransferEvent()
+    const transferEvent = await firstCard.createTransferEvent();
   }
 });
 ```
@@ -80,11 +80,13 @@ wallet.getCards().then(async (cards) => {
     - [x] getTransactions
     - [x] getCards
   - [x] signEvent
-  - [ ] createInvoice / createZap
+  - [x] createZap
+  - [ ] createInvoice
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
     - [ ] onSuccess()
     - [ ] onError()
+  - [ ] payInvoice
   - [ ] registerHandle (request + payment + claim)
   - [ ] addCard / activateCard
   - [ ] claimCard

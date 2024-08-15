@@ -1,22 +1,30 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
 import { LaWalletKinds } from '../constants/nostr';
+import { Api } from '../lib/api';
 import { cardsFilter, parseCardsEvents } from '../lib/cards';
+import { buildZapRequestEvent } from '../lib/events';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk';
 import { parseTransactionsEvents, transactionsFilters } from '../lib/transactions';
-import { hexToUint8Array, nowInSeconds } from '../lib/utils';
+import { escapingBrackets, hexToUint8Array, nowInSeconds } from '../lib/utils';
+import { CardsInfo } from '../types/Card';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Transaction } from '../types/Transaction';
+import { Card } from './Card';
 import { Federation } from './Federation';
 import { FetchParameters, Identity } from './Identity';
-import { CardsInfo } from '../types/Card';
-import { Card } from './Card';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
   ndk?: NDK;
   federationConfig?: CreateFederationConfigParams;
   fetchParams?: FetchParameters;
+};
+
+type ZapParams = {
+  receiverPubkey: string;
+  sats: number;
+  comment?: string;
 };
 
 export class Wallet extends Identity {
@@ -104,6 +112,27 @@ export class Wallet extends Identity {
     }
 
     return cards;
+  }
+
+  async createZap(params: ZapParams) {
+    if (!this.lnurlpData) throw new Error('LnUrlpData not found');
+    if (params.sats < 1) throw new Error('The sats amount must be greater than or equal to 1');
+    const api = Api();
+
+    let mSats = params.sats * 1000;
+
+    const zapRequestEvent: NostrEvent | undefined = await this.signEvent(
+      buildZapRequestEvent(this.pubkey, params.receiverPubkey, mSats, this.federation.relaysList),
+    );
+
+    const zapRequestURI: string = encodeURI(JSON.stringify(zapRequestEvent));
+
+    const response = await api.get(
+      `${this.lnurlpData.callback}?amount=${params.sats * 1000}&nostr=${zapRequestURI}${params.comment ? `&comment=${escapingBrackets(params.comment)}` : ''}`,
+    );
+    if (!response) throw new Error('An error occurred while creating a zap');
+
+    return response.pr;
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
