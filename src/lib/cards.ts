@@ -1,6 +1,6 @@
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
 import { Card } from '../class/Card';
-import { LaWalletKinds } from '../constants/nostr';
+import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
 import { Wallet } from '../exports';
 import {
   CardConfigPayload,
@@ -12,7 +12,7 @@ import {
   ConfigTypes,
 } from '../types/Card';
 import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04';
-import { getTagValue, parseContent } from './utils';
+import { getTagValue, nowInSeconds, parseContent } from './utils';
 
 export function cardsFilter(pubkey: string, cardPubkey: string) {
   return [
@@ -113,4 +113,45 @@ export function calculateDelta(limitType: CardLimitTypes, limitTime: number): nu
 
   const delta = timeMultipliers[limitType] * limitTime;
   return delta;
+}
+
+export const buildCardTransferDonationEvent = async (pubkey: string, uuidNip04: string, cardPubkey: string) => {
+  const expiry: number = nowInSeconds() + 3600;
+  const event: NostrEvent = {
+    kind: LaWalletKinds.EPHEMERAL,
+    pubkey,
+    content: uuidNip04,
+    created_at: nowInSeconds(),
+    tags: [
+      ['t', LaWalletTags.CARD_TRANSFER_DONATION],
+      ['p', cardPubkey],
+      ['expiry', expiry.toString()],
+    ],
+  };
+
+  return event;
+};
+
+export async function buildDonationEvent(card: Card): Promise<NostrEvent | undefined> {
+  try {
+    if (!card.wallet.pubkey) return;
+    const encryptedUUID: string | undefined = await extendedEncrypt(
+      card.wallet.signer,
+      card.wallet.federation.modulePubkeys.card,
+      card.uuid,
+    );
+    if (!encryptedUUID) return;
+
+    const transferDonationEvent = await buildCardTransferDonationEvent(
+      card.wallet.pubkey,
+      encryptedUUID,
+      card.wallet.federation.modulePubkeys.card,
+    );
+
+    const signedEvent: NostrEvent = await card.wallet.signEvent(transferDonationEvent);
+
+    return signedEvent;
+  } catch {
+    return;
+  }
 }

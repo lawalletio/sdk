@@ -1,5 +1,6 @@
+import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { Wallet } from '../exports';
-import { calculateDelta, createCardConfigEvent } from '../lib/cards';
+import { buildDonationEvent, calculateDelta, createCardConfigEvent } from '../lib/cards';
 import {
   CardLimitParams,
   CardMetadataParams,
@@ -91,6 +92,13 @@ export class Card {
 
   async restartLimits() {
     return this.replaceLimits([]);
+  }
+
+  async createTransferEvent() {
+    const donationEvent: NostrEvent | undefined = await buildDonationEvent(this);
+    if (!donationEvent) return;
+
+    return donationEvent;
   }
 
   async broadcastConfig(newCardData: CardData) {
