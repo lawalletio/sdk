@@ -48,13 +48,13 @@ wallet.getCards().then((cards) => {
   - [x] Pubkey info
   - [x] Lightning Info
   - [x] Nostr Profile
-- [ ] Card
+- [x] Card
   - [x] info (design, name, description)
   - [x] limits
   - [x] enable/disable
   - [x] addLimit
-  - [ ] restartLimits
-  - [ ] replaceLimits
+  - [x] restartLimits
+  - [x] replaceLimits
 - [ ] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information

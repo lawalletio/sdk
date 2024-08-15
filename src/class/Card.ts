@@ -43,6 +43,11 @@ export class Card {
     return this.broadcastConfig(newCardData);
   }
 
+  async replaceLimits(limits: Limit[]) {
+    let newCardData = { ...this._cardData, limits };
+    return this.broadcastConfig(newCardData);
+  }
+
   async addLimit(params: LimitParams) {
     const { tokenId, limitAmount, limitType, limitTime = 0 } = params;
 
@@ -67,9 +72,25 @@ export class Card {
     return this.replaceLimits(limitsWithoutDup);
   }
 
-  async replaceLimits(limits: Limit[]) {
-    let newCardData = { ...this._cardData, limits };
-    return this.broadcastConfig(newCardData);
+  async restartLimits() {
+    const defaultLimits: Limit[] = [
+      {
+        name: 'Transactional limit',
+        description: 'Spending limit per transaction',
+        token: 'BTC',
+        amount: BigInt(100000000000).toString(),
+        delta: 0,
+      },
+      {
+        name: 'Daily limit',
+        description: 'Spending limit per day',
+        token: 'BTC',
+        amount: BigInt(100000000000).toString(),
+        delta: 86400,
+      },
+    ];
+
+    return this.replaceLimits(defaultLimits);
   }
 
   async broadcastConfig(newCardData: CardData) {
