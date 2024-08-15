@@ -12,7 +12,7 @@ This package is under development and is not yet available on npm.
 pnpm add @lawallet/sdk @nostr-dev-kit/ndk
 ```
 
-## Usage
+## Usage examples
 
 ```ts
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
@@ -21,21 +21,34 @@ import { Wallet } from '@lawallet/sdk';
 const signer = NDKPrivateKeySigner.generate();
 const wallet = new Wallet({ signer });
 
-const balance = await wallet.getBalance('BTC'); // Returns BTC balance in millisatoshis
-const transactions = await wallet.getTransactions(); // Returns all transactions
+// Returns BTC balance in millisatoshis
+wallet.getBalance('BTC').then((bal) => {
+  console.log(`Account BTC Balance: ${bal} satoshis`);
+})
 
-wallet.getCards().then((cards) => {
+// Returns all transactions
+wallet.getTransactions().then((transactions) => {
+  console.log('Total account transactions: ', transactions.length)
+})
+
+wallet.getCards().then(async (cards) => {
   if (cards.length) {
+    // Get first card
     let firstCard = cards[0];
 
-    await firstCard.disable(); // pause card
+    // Pause first card
+    await firstCard.disable();
 
+    // Add card limit -> 1000 satoshis every 12 hours
     await firstCard.addLimit({
       tokenId: 'BTC',
       limitType: 'hours',
       limitTime: 12,
       limitAmount: 1000000,
-    }); // add card limit -> 1000 satoshis every 12 hours
+    });
+
+    // Prepare the event to transfer the card
+    const transferEvent = await firstCard.createTransferEvent()
   }
 });
 ```
@@ -48,7 +61,7 @@ wallet.getCards().then((cards) => {
   - [x] Pubkey info
   - [x] Lightning Info
   - [x] Nostr Profile
-- [ ] Card
+- [x] Card
   - [x] info (design, name, description)
   - [x] limits
   - [x] enable/disable
@@ -56,7 +69,7 @@ wallet.getCards().then((cards) => {
   - [x] addLimit
   - [x] restartLimits
   - [x] replaceLimits
-  - [ ] createTransfer
+  - [x] createTransferEvent
 - [ ] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information
