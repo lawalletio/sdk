@@ -1,13 +1,13 @@
 import { Wallet } from '../exports';
-import { createCardConfigEvent } from '../lib/cards';
-import type { Limit, CardPayload, Design } from '../types/Card';
+import { calculateDelta, createCardConfigEvent } from '../lib/cards';
+import { CardStatus, LimitParams, type CardPayload, type Design, type Limit } from '../types/Card';
 
 interface CardData {
   uuid: string;
   design: Design;
   name: string;
   description: string;
-  status: boolean;
+  status: string;
   limits: Limit[];
 }
 
@@ -24,41 +24,63 @@ export class Card {
       design: cardDesign,
       name,
       description,
-      status: Boolean(cardConfig.status === 'ENABLED'),
-      limits: cardConfig.limits,
+      status,
+      limits,
     };
   }
 
   async enable() {
-    if (this.isEnabled()) throw new Error('The card is already enabled');
+    if (this.enabled) throw new Error('The card is already enabled');
 
-    this.status = true;
-
-    let cardConfigEvent = await createCardConfigEvent(this);
-    if (!cardConfigEvent) {
-      this.status = false;
-      return false;
-    }
-
-    return this._wallet.federation.httpPublish(cardConfigEvent);
+    let newCardData: CardData = { ...this._cardData, status: CardStatus.ENABLED };
+    return this.broadcastConfig(newCardData);
   }
 
   async disable() {
-    if (!this.isEnabled()) throw new Error('The card is already disabled');
+    if (!this.enabled) throw new Error('The card is already disabled');
 
-    this.status = false;
-
-    let cardConfigEvent = await createCardConfigEvent(this);
-    if (!cardConfigEvent) {
-      this.status = true;
-      return false;
-    }
-
-    return this._wallet.federation.httpPublish(cardConfigEvent);
+    let newCardData: CardData = { ...this._cardData, status: CardStatus.DISABLED };
+    return this.broadcastConfig(newCardData);
   }
 
-  isEnabled() {
-    return this.enable;
+  async addLimit(params: LimitParams) {
+    const { tokenId, limitAmount, limitType, limitTime = 0 } = params;
+
+    let name = `${limitType} limit`;
+    let description =
+      limitType === 'transaction'
+        ? `${limitAmount} per ${limitType}`
+        : `${limitAmount} every ${limitTime} ${limitType}`;
+
+    let delta = calculateDelta(limitType, limitTime);
+
+    let limitsWithoutDup = this._cardData.limits.filter((limit) => limit.delta !== delta);
+
+    limitsWithoutDup.push({
+      name,
+      description,
+      token: tokenId,
+      amount: BigInt(limitAmount).toString(),
+      delta,
+    });
+
+    let newCardData = { ...this._cardData, limits: limitsWithoutDup };
+    return this.broadcastConfig(newCardData);
+  }
+
+  async broadcastConfig(newCardData: CardData) {
+    let oldCardData = { ...this._cardData };
+    this._cardData = newCardData;
+
+    try {
+      let cardConfigEvent = await createCardConfigEvent(this);
+      if (!cardConfigEvent) throw new Error();
+
+      return this._wallet.federation.httpPublish(cardConfigEvent);
+    } catch {
+      this._cardData = oldCardData;
+      return false;
+    }
   }
 
   get wallet() {
@@ -81,12 +103,8 @@ export class Card {
     return this._cardData.description;
   }
 
-  get status() {
-    return this._cardData.status;
-  }
-
-  set status(new_status: boolean) {
-    this._cardData.status = new_status;
+  get enabled() {
+    return this._cardData.status === 'ENABLED';
   }
 
   get limits(): Limit[] {

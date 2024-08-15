@@ -24,7 +24,20 @@ const wallet = new Wallet({ signer });
 const balance = await wallet.getBalance('BTC'); // Returns BTC balance in millisatoshis
 const transactions = await wallet.getTransactions(); // Returns all transactions
 
-const cards = await wallet.getCards(); // Returns the information and configuration of the wallet cards
+wallet.getCards().then((cards) => {
+  if (cards.length) {
+    let firstCard = cards[0];
+
+    await firstCard.disable(); // pause card
+
+    await firstCard.addLimit({
+      tokenId: 'BTC',
+      limitType: 'hours',
+      limitTime: 12,
+      limitAmount: 1000000,
+    }); // add card limit -> 1000 satoshis every 12 hours
+  }
+});
 ```
 
 ## To - do
@@ -39,8 +52,8 @@ const cards = await wallet.getCards(); // Returns the information and configurat
   - [x] info (design, name, description)
   - [x] limits
   - [x] enable/disable
-  - [ ] addLimit
-  - [ ] removeLimit
+  - [x] addLimit
+  - [ ] restartLimits
   - [ ] replaceLimits
 - [ ] Wallet
   - [x] Signer + Identity

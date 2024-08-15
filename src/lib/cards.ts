@@ -2,7 +2,15 @@ import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
 import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04';
 import { Wallet } from '../exports';
 import { getTagValue, parseContent } from './utils';
-import { CardConfigPayload, CardDataPayload, CardPayload, CardsInfo, CardStatus, ConfigTypes } from '../types/Card';
+import {
+  CardConfigPayload,
+  CardDataPayload,
+  CardPayload,
+  CardsInfo,
+  CardStatus,
+  ConfigTypes,
+  LimitTypes,
+} from '../types/Card';
 import { LaWalletKinds } from '../constants/nostr';
 import { Card } from '../class/Card';
 
@@ -25,12 +33,12 @@ export const buildCardConfigEvent = async (multiNip04Event: NostrEvent): Promise
 };
 
 export function buildCardPayload(card: Card): CardPayload {
-  const { name, description, status, limits } = card;
+  const { name, description, enabled, limits } = card;
 
   return {
     name,
     description,
-    status: status ? CardStatus.ENABLED : CardStatus.DISABLED,
+    status: enabled ? CardStatus.ENABLED : CardStatus.DISABLED,
     limits,
   };
 }
@@ -86,4 +94,23 @@ export async function parseCardsEvents(wallet: Wallet, events: NDKEvent[]) {
   );
 
   return cards;
+}
+
+export function calculateDelta(limitType: LimitTypes, limitTime: number): number {
+  if (limitType === 'transaction') return 0;
+
+  if (limitTime <= 0) throw new Error(`You can't calculate the delta of ${limitTime} ${limitType}`);
+
+  const timeMultipliers: { [key in typeof limitType]: number } = {
+    seconds: 1,
+    minutes: 60,
+    hours: 3600,
+    days: 86400,
+    weeks: 604800,
+    months: 2592000,
+    years: 31536000,
+  };
+
+  const delta = timeMultipliers[limitType] * limitTime;
+  return delta;
 }
