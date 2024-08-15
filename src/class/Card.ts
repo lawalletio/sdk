@@ -64,7 +64,11 @@ export class Card {
       delta,
     });
 
-    let newCardData = { ...this._cardData, limits: limitsWithoutDup };
+    return this.replaceLimits(limitsWithoutDup);
+  }
+
+  async replaceLimits(limits: Limit[]) {
+    let newCardData = { ...this._cardData, limits };
     return this.broadcastConfig(newCardData);
   }
 
