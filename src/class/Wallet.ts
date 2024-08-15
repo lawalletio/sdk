@@ -23,8 +23,14 @@ type WalletParameters = {
 
 type ZapParams = {
   receiverPubkey: string;
-  sats: number;
+  milisatoshis: number;
   comment?: string;
+};
+
+type InvoiceParams = {
+  milisatoshis: number;
+  comment?: string;
+  nostr?: string;
 };
 
 export class Wallet extends Identity {
@@ -115,24 +121,30 @@ export class Wallet extends Identity {
   }
 
   async createZap(params: ZapParams) {
-    if (!this.lnurlpData) throw new Error('LnUrlpData not found');
-    if (params.sats < 1) throw new Error('The sats amount must be greater than or equal to 1');
-    const api = Api();
-
-    let mSats = params.sats * 1000;
+    if (params.milisatoshis < 1000) throw new Error('The milisatoshis amount must be greater than or equal to 1000');
 
     const zapRequestEvent: NostrEvent | undefined = await this.signEvent(
-      buildZapRequestEvent(this.pubkey, params.receiverPubkey, mSats, this.federation.relaysList),
+      buildZapRequestEvent(this.pubkey, params.receiverPubkey, params.milisatoshis, this.federation.relaysList),
     );
 
     const zapRequestURI: string = encodeURI(JSON.stringify(zapRequestEvent));
 
-    const response = await api.get(
-      `${this.lnurlpData.callback}?amount=${params.sats * 1000}&nostr=${zapRequestURI}${params.comment ? `&comment=${escapingBrackets(params.comment)}` : ''}`,
-    );
-    if (!response) throw new Error('An error occurred while creating a zap');
+    return this.generateInvoice({ milisatoshis: params.milisatoshis, nostr: zapRequestURI, comment: params.comment });
+  }
 
-    return response.pr;
+  async generateInvoice(params: InvoiceParams) {
+    let lnurlpData = this.lnurlpData ?? (await this.fetch()).lnurlpData;
+    if (!lnurlpData) throw new Error('lnurlpData not found');
+
+    const { milisatoshis, comment, nostr } = params;
+    const api = Api();
+
+    const response = await api.get(
+      `${lnurlpData.callback}?amount=${milisatoshis}${nostr ? `&nostr=${nostr}` : ''}${comment ? `&comment=${escapingBrackets(comment)}` : ''}`,
+    );
+    if (!response) throw new Error('An error occurred while creating a invoice');
+
+    return response;
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {

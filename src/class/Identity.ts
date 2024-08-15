@@ -1,11 +1,9 @@
-import NDK, { NDKUser, NDKUserProfile, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { nip19 } from 'nostr-tools';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk';
 import { parseWalias } from '../lib/utils';
 import { LNRequestResponse } from '../types/LnUrl';
 import { Federation } from './Federation';
-import { Api } from '../lib/api';
-import { buildZapRequestEvent } from '../lib/events';
 
 export type FetchParameters = {
   enabled: boolean;
@@ -64,8 +62,8 @@ export class Identity {
     }
   }
 
-  async fetch() {
-    let profile = await this.fetchProfile();
+  async fetch(): Promise<{ lnurlpData: LNRequestResponse | undefined; nostr: NDKUserProfile | undefined }> {
+    let nostr = await this.fetchProfile();
 
     try {
       const username: string = await this._federation.getUsername(this._pubkey);
@@ -79,12 +77,12 @@ export class Identity {
 
       return {
         lnurlpData,
-        profile,
+        nostr,
       };
     } catch (err) {
       return {
         lnurlpData: this._federation.getLUD06(this._pubkey),
-        profile,
+        nostr,
       };
     }
   }

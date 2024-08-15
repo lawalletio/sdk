@@ -54,6 +54,16 @@ wallet.getCards().then(async (cards) => {
     const transferEvent = await firstCard.createTransferEvent();
   }
 });
+
+wallet.generateInvoice({ milisatoshis: 1000 }).then((invoice) => {
+  // Generate payment request
+  console.log(invoice.pr);
+});
+
+wallet.createZap({ milisatoshis: 1000, receiverPubkey: '...' }).then((invoice) => {
+  // Generate zap request -> returns payment request
+  console.log(invoice.pr);
+});
 ```
 
 ## To - do
@@ -81,7 +91,7 @@ wallet.getCards().then(async (cards) => {
     - [x] getCards
   - [x] signEvent
   - [x] createZap
-  - [ ] createInvoice
+  - [x] createInvoice
   - [ ] prepareTransaction (external / internal)
   - [ ] sendTransaction
     - [ ] onSuccess()
