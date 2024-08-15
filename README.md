@@ -48,7 +48,7 @@ wallet.getCards().then((cards) => {
   - [x] Pubkey info
   - [x] Lightning Info
   - [x] Nostr Profile
-- [x] Card
+- [ ] Card
   - [x] info (design, name, description)
   - [x] limits
   - [x] enable/disable
@@ -56,6 +56,7 @@ wallet.getCards().then((cards) => {
   - [x] addLimit
   - [x] restartLimits
   - [x] replaceLimits
+  - [ ] createTransfer
 - [ ] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information
@@ -69,6 +70,8 @@ wallet.getCards().then((cards) => {
     - [ ] onSuccess()
     - [ ] onError()
   - [ ] registerHandle (request + payment + claim)
+  - [ ] addCard / activateCard
+  - [ ] claimCard
 - [ ] Client
   - [ ] Multiples accounts
     - [ ] accounts
