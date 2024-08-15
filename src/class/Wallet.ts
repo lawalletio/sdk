@@ -24,6 +24,7 @@ type WalletParameters = {
 type ZapParams = {
   receiverPubkey: string;
   milisatoshis: number;
+  tags: NDKTag[];
   comment?: string;
 };
 
@@ -124,7 +125,13 @@ export class Wallet extends Identity {
     if (params.milisatoshis < 1000) throw new Error('The milisatoshis amount must be greater than or equal to 1000');
 
     const zapRequestEvent: NostrEvent | undefined = await this.signEvent(
-      buildZapRequestEvent(this.pubkey, params.receiverPubkey, params.milisatoshis, this.federation.relaysList),
+      buildZapRequestEvent(
+        this.pubkey,
+        params.receiverPubkey,
+        params.milisatoshis,
+        this.federation.relaysList,
+        params.tags,
+      ),
     );
 
     const zapRequestURI: string = encodeURI(JSON.stringify(zapRequestEvent));
