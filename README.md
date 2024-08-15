@@ -47,6 +47,9 @@ wallet.getCards().then(async (cards) => {
       limitAmount: 1000000,
     });
 
+    // Set card metadata (name, description)
+    await firstCard.setMetadata({ name: 'card name', description: 'card description' })
+
     // Prepare the event to transfer the card
     const transferEvent = await firstCard.createTransferEvent()
   }
