@@ -64,12 +64,12 @@ wallet.getCards().then(async (cards) => {
 });
 
 wallet.generateInvoice({ milisatoshis: 1000 }).then((invoice) => {
-  // Generate payment request
+  // Generate payment request of this wallet
   console.log(invoice.pr);
 });
 
 wallet.createZap({ milisatoshis: 1000, receiverPubkey: '...' }).then((invoice) => {
-  // Generate zap request -> returns payment request
+  // Generate zap request -> returns payment request of zap request
   console.log(invoice.pr);
 });
 ```

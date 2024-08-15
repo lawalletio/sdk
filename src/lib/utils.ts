@@ -1,4 +1,5 @@
 import { NDKTag } from '@nostr-dev-kit/ndk';
+import { Api } from './api';
 
 export const nowInSeconds = (): number => {
   return Math.floor(Date.now() / 1000);
@@ -81,4 +82,23 @@ export function extractEscappedMessage(text: string) {
   const escappedMessage = fragments.filter((_, index) => index % 2 === 0).join('');
 
   return escappedMessage;
+}
+
+type InvoiceParams = {
+  callback: string;
+  milisatoshis: number;
+  comment?: string;
+  nostr?: string;
+};
+
+export async function createInvoice(params: InvoiceParams) {
+  const { callback, milisatoshis, comment, nostr } = params;
+
+  const api = Api();
+  const response = await api.get(
+    `${callback}?amount=${milisatoshis}${nostr ? `&nostr=${nostr}` : ''}${comment ? `&comment=${escapingBrackets(comment)}` : ''}`,
+  );
+
+  if (!response) throw new Error('An error occurred while creating a invoice');
+  return response;
 }

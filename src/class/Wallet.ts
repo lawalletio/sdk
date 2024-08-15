@@ -6,7 +6,7 @@ import { cardsFilter, parseCardsEvents } from '../lib/cards';
 import { buildZapRequestEvent } from '../lib/events';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk';
 import { parseTransactionsEvents, transactionsFilters } from '../lib/transactions';
-import { escapingBrackets, hexToUint8Array, nowInSeconds } from '../lib/utils';
+import { createInvoice, escapingBrackets, hexToUint8Array, nowInSeconds } from '../lib/utils';
 import { CardsInfo } from '../types/Card';
 import type { CreateFederationConfigParams } from '../types/Federation';
 import { Transaction } from '../types/Transaction';
@@ -26,12 +26,6 @@ type ZapParams = {
   milisatoshis: number;
   tags: NDKTag[];
   comment?: string;
-};
-
-type InvoiceParams = {
-  milisatoshis: number;
-  comment?: string;
-  nostr?: string;
 };
 
 export class Wallet extends Identity {
@@ -136,22 +130,26 @@ export class Wallet extends Identity {
 
     const zapRequestURI: string = encodeURI(JSON.stringify(zapRequestEvent));
 
-    return this.generateInvoice({ milisatoshis: params.milisatoshis, nostr: zapRequestURI, comment: params.comment });
+    const identity = new Identity({ pubkey: params.receiverPubkey });
+    const { lnurlpData } = await identity.fetch();
+
+    if (!lnurlpData) throw new Error(`lnurlpData of ${params.receiverPubkey} pubkey not found`);
+
+    return createInvoice({
+      callback: lnurlpData.callback,
+      milisatoshis: params.milisatoshis,
+      nostr: zapRequestURI,
+      comment: params.comment,
+    });
   }
 
-  async generateInvoice(params: InvoiceParams) {
-    let lnurlpData = this.lnurlpData ?? (await this.fetch()).lnurlpData;
+  async generateInvoice(params: { milisatoshis: number; comment?: string }) {
+    let lnurlpData = this.lnurlpData || (await this.fetch()).lnurlpData;
     if (!lnurlpData) throw new Error('lnurlpData not found');
 
-    const { milisatoshis, comment, nostr } = params;
-    const api = Api();
+    const { milisatoshis, comment } = params;
 
-    const response = await api.get(
-      `${lnurlpData.callback}?amount=${milisatoshis}${nostr ? `&nostr=${nostr}` : ''}${comment ? `&comment=${escapingBrackets(comment)}` : ''}`,
-    );
-    if (!response) throw new Error('An error occurred while creating a invoice');
-
-    return response;
+    return createInvoice({ callback: lnurlpData.callback, milisatoshis, comment });
   }
 
   prepareInternalTransaction(to: string, amount: number): NostrEvent {
