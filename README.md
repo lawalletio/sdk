@@ -21,6 +21,14 @@ import { Wallet } from '@lawallet/sdk';
 const signer = NDKPrivateKeySigner.generate();
 const wallet = new Wallet({ signer });
 
+wallet.fetch().then(({ lnurlpData, nostr }) => {
+  // returns lnurlpData -> /.well-known/lnurlp/<user> response
+  console.log('lnurlpData: ', lnurlpData);
+
+  // returns nostr profile
+  console.log('Nostr Profile: ', nostr);
+});
+
 // Returns BTC balance in millisatoshis
 wallet.getBalance('BTC').then((bal) => {
   console.log(`Account BTC Balance: ${bal} milisatoshis ~ ${(bal / 100000000).toFixed(8)} BTC`);
