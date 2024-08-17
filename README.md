@@ -111,11 +111,11 @@ wallet.payInvoice('lnbc1...');
   - [x] signEvent
   - [x] createZap
   - [x] createInvoice
-  - [ ] prepareTransaction (type: 'lnurl' | 'walias' | 'pubkey' | 'invoice', data: string, tokenId?: number, amount?: number): event
-  - [ ] sendTransaction (event)
+  - [ ] sendTransaction
+    - [x] send internal / lud16 / lnurl transfer
     - [ ] onSuccess()
     - [ ] onError()
-  - [ ] payInvoice (bolt11)
+  - [x] payInvoice
   - [ ] registerHandle (request + payment + claim)
   - [ ] addCard / activateCard
   - [ ] claimCard
