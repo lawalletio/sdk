@@ -5,6 +5,7 @@ import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
 import { startTags, statusTags } from '../constants/tags.js';
 import { ModulePubkeysConfigType } from '../types/Federation.js';
 import {
+  ExecuteTransactionParams,
   InvoiceTransferType,
   LNURLTransferType,
   Transaction,
@@ -25,6 +26,7 @@ import {
   validateEmail,
 } from './utils.js';
 import { extendedEncrypt } from './nip04.js';
+import { checkRelaysConnection, killRelaysConnection } from './ndk.js';
 
 type EventWithStatus = {
   startEvent: NDKEvent | undefined;
@@ -428,3 +430,51 @@ export const encryptMetadataTag = async (
   const metadataTag: NDKTag = ['metadata', 'true', 'nip04', metadataEncrypted];
   return metadataTag;
 };
+
+export function receivedTransactionFilter(startEvent: NostrEvent, ledgerPubkey: string) {
+  return {
+    authors: [ledgerPubkey],
+    kinds: [LaWalletKinds.REGULAR as unknown as NDKKind],
+    '#e': startEvent?.id ? [startEvent.id] : [],
+  };
+}
+
+export async function executeTransaction(params: ExecuteTransactionParams) {
+  const { ndk, startEvent, federation, onSuccess, onError } = params;
+
+  let published = await federation.httpPublish(startEvent);
+
+  let relaysConnectedBeforeFetch: boolean = await checkRelaysConnection(ndk);
+
+  return new Promise((resolve, reject) => {
+    if (!published) reject('The transaction start event could not be published.');
+
+    let filters = receivedTransactionFilter(startEvent, federation.modulePubkeys.ledger);
+
+    const s = ndk.subscribe(filters, { closeOnEose: true }, undefined, false);
+
+    const t2 = setTimeout(() => {
+      s.stop();
+      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+      resolve(null);
+    }, 10000);
+
+    s.on('event', async (event: NDKEvent) => {
+      let nostrEvent = await event.toNostrEvent();
+
+      if (onSuccess) onSuccess(nostrEvent);
+      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+      resolve(event);
+    });
+
+    s.on('eose', () => {
+      clearTimeout(t2);
+
+      if (onError) onError('Error');
+      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+      resolve(null);
+    });
+
+    s.start();
+  });
+}

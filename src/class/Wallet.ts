@@ -3,10 +3,12 @@ import { getPublicKey, UnsignedEvent } from 'nostr-tools';
 import { LaWalletKinds } from '../constants/nostr.js';
 import { cardsFilter, parseCardsEvents } from '../lib/cards.js';
 import { buildZapRequestEvent } from '../lib/events.js';
+import lightBolt11 from '../lib/light-bolt11.js';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
 import {
   buildTxStartEvent,
   encryptMetadataTag,
+  executeTransaction,
   formatLNURLData,
   parseTransactionsEvents,
   transactionsFilters,
@@ -16,6 +18,7 @@ import { CardsInfo } from '../types/Card.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import {
   InternalTransactionParams,
+  InvoiceTransactionParams,
   LNURLTransferType,
   SendTransactionParams,
   Transaction,
@@ -23,8 +26,7 @@ import {
 } from '../types/Transaction.js';
 import { Card } from './Card.js';
 import { Federation } from './Federation.js';
-import { FetchParameters, Identity } from './Identity.js';
-import lightBolt11 from '../lib/light-bolt11.js';
+import { Identity } from './Identity.js';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -193,7 +195,7 @@ export class Wallet extends Identity {
       lnurlpData,
       type,
       data,
-    }: LNURLTransferType = await formatLNURLData(params.to, this.federation);
+    }: LNURLTransferType = await formatLNURLData(params.receiver, this.federation);
     if (!lnurlpData) throw new Error('Malformed receptor');
 
     if (
@@ -213,28 +215,27 @@ export class Wallet extends Identity {
         if (lnurlpData.accountPubKey === this.pubkey) throw new Error('You cannot send yourself');
 
         return this.sendInternalTransaction({
-          tokenId: params.tokenId,
-          receiverPubkey: lnurlpData.accountPubKey,
-          amount: params.amount,
-          comment: params.comment,
+          ...params,
+          receiver: lnurlpData.accountPubKey,
           metadata,
         });
       }
 
       case TransferTypes.LUD16 || TransferTypes.LNURL: {
-        const { pr } = await createInvoice({
+        const { pr: paymentRequest } = await createInvoice({
           callback: lnurlpData.callback,
           milisatoshis: params.amount,
           comment: params.comment,
         });
-        if (!pr) throw new Error('The invoice could not be generated');
+        if (!paymentRequest) throw new Error('The invoice could not be generated');
 
-        return this.payInvoice(pr, metadata);
+        return this.payInvoice({ paymentRequest, metadata, onSuccess: params.onSuccess, onError: params.onError });
       }
     }
   }
 
-  async payInvoice(paymentRequest: string, metadata: Record<string, string> = {}) {
+  async payInvoice(params: InvoiceTransactionParams) {
+    const { paymentRequest, metadata = {}, onSuccess, onError } = params;
     const invoiceInfo = lightBolt11.decode(paymentRequest);
 
     if (!invoiceInfo || !invoiceInfo.millisatoshis) throw new Error('Malformed payment request');
@@ -255,13 +256,20 @@ export class Wallet extends Identity {
 
     if (!txStartEvent) throw new Error('Error on create start event');
 
-    return this.federation.httpPublish(txStartEvent);
+    return executeTransaction({
+      type: 'external',
+      ndk: this.ndk,
+      startEvent: txStartEvent,
+      federation: this.federation,
+      onSuccess,
+      onError,
+    });
   }
 
   async sendInternalTransaction(params: InternalTransactionParams) {
-    const { tokenId, receiverPubkey, amount, comment = '', metadata = {} } = params;
+    const { tokenId, receiver, amount, comment = '', metadata = {}, onSuccess, onError } = params;
 
-    const metadataTag: NDKTag = await encryptMetadataTag(this.signer, receiverPubkey, metadata);
+    const metadataTag: NDKTag = await encryptMetadataTag(this.signer, receiver, metadata);
 
     const txStartEvent = await this.signEvent(
       buildTxStartEvent(
@@ -270,7 +278,7 @@ export class Wallet extends Identity {
           amount,
           senderPubkey: this.pubkey,
           comment,
-          tags: [['p', receiverPubkey], metadataTag],
+          tags: [['p', receiver], metadataTag],
         },
         this.federation,
       ),
@@ -278,6 +286,13 @@ export class Wallet extends Identity {
 
     if (!txStartEvent) throw new Error('Error on create start event');
 
-    return this.federation.httpPublish(txStartEvent);
+    return executeTransaction({
+      type: 'internal',
+      ndk: this.ndk,
+      startEvent: txStartEvent,
+      federation: this.federation,
+      onSuccess,
+      onError,
+    });
   }
 }

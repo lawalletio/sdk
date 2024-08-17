@@ -9,7 +9,7 @@ export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK
   return tmpNDK;
 }
 
-async function checkRelaysConnection(ndk: NDK) {
+export async function checkRelaysConnection(ndk: NDK) {
   if (ndk.pool.urls().length === 0) throw new Error('No relays found');
 
   let connectedRelays: number = ndk.pool.connectedRelays().length;
@@ -22,7 +22,7 @@ async function checkRelaysConnection(ndk: NDK) {
   return true;
 }
 
-function killRelaysConnection(ndk: NDK) {
+export function killRelaysConnection(ndk: NDK) {
   const relays = ndk.pool.connectedRelays();
   relays.map((relay) => relay.disconnect());
 

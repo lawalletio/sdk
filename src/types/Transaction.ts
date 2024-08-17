@@ -1,5 +1,6 @@
-import { NDKTag, type NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKFilter, NDKTag, type NostrEvent } from '@nostr-dev-kit/ndk';
 import { LNRequestResponse } from './LnUrl.js';
+import { Federation } from '../class/Federation.js';
 
 export interface Transaction {
   id: string;
@@ -67,17 +68,30 @@ export type TokensAmount = {
   [_tokenId: string]: number;
 };
 
-export type SendTransactionParams = {
-  tokenId: string;
-  to: string;
-  amount: number;
-  comment?: string;
-};
+export interface TransactionStatusParams {
+  onSuccess?: (event: NostrEvent) => void;
+  onError?: (reason: string) => void;
+}
 
-export type InternalTransactionParams = {
+export interface SendTransactionParams extends TransactionStatusParams {
   tokenId: string;
-  receiverPubkey: string;
+  receiver: string;
   amount: number;
   comment?: string;
+}
+
+export interface InvoiceTransactionParams extends TransactionStatusParams {
+  paymentRequest: string;
   metadata?: Record<string, string>;
-};
+}
+
+export interface InternalTransactionParams extends SendTransactionParams {
+  metadata?: Record<string, string>;
+}
+
+export interface ExecuteTransactionParams extends TransactionStatusParams {
+  type: 'internal' | 'external';
+  ndk: NDK;
+  startEvent: NostrEvent;
+  federation: Federation;
+}
