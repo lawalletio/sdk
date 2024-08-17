@@ -1,7 +1,7 @@
 import NDK, { NDKFilter } from '@nostr-dev-kit/ndk';
-import type { CreateFederationConfigParams } from '../types/Federation';
-import { Federation } from './Federation';
-import { Wallet } from './Wallet';
+import type { CreateFederationConfigParams } from '../types/Federation.js';
+import { Federation } from './Federation.js';
+import { Wallet } from './Wallet.js';
 
 export class Client {
   private _ndk: NDK;

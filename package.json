@@ -2,6 +2,7 @@
   "name": "@lawallet/sdk",
   "version": "0.1.10",
   "description": "LaWallet software dev kit",
+  "type": "module",
   "private": false,
   "repository": {
     "type": "git",
@@ -23,7 +24,10 @@
     "@eslint/js": "^9.9.0",
     "@noble/curves": "^1.5.0",
     "@noble/hashes": "^1.4.0",
+    "@noble/secp256k1": "^2.1.0",
+    "@scure/base": "^1.1.7",
     "@types/node": "^20.11.17",
+    "@types/ws": "^8.5.12",
     "eslint": "9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",

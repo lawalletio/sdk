@@ -1,2 +1,2 @@
-export * from '../types/Federation';
-export * from '../types/Transaction';
+export * from '../types/Federation.js';
+export * from '../types/Transaction.js';

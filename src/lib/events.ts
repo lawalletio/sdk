@@ -1,5 +1,5 @@
 import { NDKKind, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
-import { nowInSeconds } from './utils';
+import { nowInSeconds } from './utils.js';
 
 export const buildZapRequestEvent = (
   senderPubkey: string,

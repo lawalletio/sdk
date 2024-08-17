@@ -1,7 +1,7 @@
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
-import { Card } from '../class/Card';
-import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
-import { Wallet } from '../exports';
+import { Card } from '../class/Card.js';
+import { Wallet } from '../class/Wallet.js';
+import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
 import {
   CardConfigPayload,
   CardDataPayload,
@@ -10,9 +10,9 @@ import {
   CardsInfo,
   CardStatus,
   ConfigTypes,
-} from '../types/Card';
-import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04';
-import { getTagValue, nowInSeconds, parseContent } from './utils';
+} from '../types/Card.js';
+import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04.js';
+import { getTagValue, nowInSeconds, parseContent } from './utils.js';
 
 export function cardsFilter(pubkey: string, cardPubkey: string) {
   return [

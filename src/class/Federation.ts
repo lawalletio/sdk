@@ -1,8 +1,8 @@
 import { NostrEvent } from '@nostr-dev-kit/ndk';
-import { Api } from '../lib/api';
-import { createFederationConfig } from '../lib/createFederationConfig';
-import type { CreateFederationConfigParams, FederationConfig, ModulePubkeysConfigType } from '../types/Federation';
-import { LNRequestResponse } from '../types/LnUrl';
+import { Api } from '../lib/api.js';
+import { createFederationConfig } from '../lib/createFederationConfig.js';
+import type { CreateFederationConfigParams, FederationConfig, ModulePubkeysConfigType } from '../types/Federation.js';
+import { LNRequestResponse } from '../types/LnUrl.js';
 
 export class Federation {
   private _config: FederationConfig;

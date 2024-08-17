@@ -72,6 +72,17 @@ wallet.createZap({ milisatoshis: 1000, receiverPubkey: '...' }).then((invoice) =
   // Generate zap request -> returns payment request of zap request
   console.log(invoice.pr);
 });
+
+// Send transaction
+wallet.sendTransaction({
+  tokenId: 'BTC',
+  to: 'cuervo@lawallet.ar',
+  amount: 1000,
+  comment: 'Hello!',
+});
+
+// Pay invoice
+wallet.payInvoice('lnbc1...');
 ```
 
 ## To - do
@@ -100,11 +111,11 @@ wallet.createZap({ milisatoshis: 1000, receiverPubkey: '...' }).then((invoice) =
   - [x] signEvent
   - [x] createZap
   - [x] createInvoice
-  - [ ] prepareTransaction (external / internal)
-  - [ ] sendTransaction
+  - [ ] prepareTransaction (type: 'lnurl' | 'walias' | 'pubkey' | 'invoice', data: string, tokenId?: number, amount?: number): event
+  - [ ] sendTransaction (event)
     - [ ] onSuccess()
     - [ ] onError()
-  - [ ] payInvoice
+  - [ ] payInvoice (bolt11)
   - [ ] registerHandle (request + payment + claim)
   - [ ] addCard / activateCard
   - [ ] claimCard

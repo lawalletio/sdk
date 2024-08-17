@@ -1,18 +1,30 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
-import { LaWalletKinds } from '../constants/nostr';
-import { Api } from '../lib/api';
-import { cardsFilter, parseCardsEvents } from '../lib/cards';
-import { buildZapRequestEvent } from '../lib/events';
-import { createNDKInstance, fetchToNDK } from '../lib/ndk';
-import { parseTransactionsEvents, transactionsFilters } from '../lib/transactions';
-import { createInvoice, escapingBrackets, hexToUint8Array, nowInSeconds } from '../lib/utils';
-import { CardsInfo } from '../types/Card';
-import type { CreateFederationConfigParams } from '../types/Federation';
-import { Transaction } from '../types/Transaction';
-import { Card } from './Card';
-import { Federation } from './Federation';
-import { FetchParameters, Identity } from './Identity';
+import { LaWalletKinds } from '../constants/nostr.js';
+import { cardsFilter, parseCardsEvents } from '../lib/cards.js';
+import { buildZapRequestEvent } from '../lib/events.js';
+import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
+import {
+  buildTxStartEvent,
+  encryptMetadataTag,
+  formatLNURLData,
+  parseTransactionsEvents,
+  transactionsFilters,
+} from '../lib/transactions.js';
+import { createInvoice, hexToUint8Array, nowInSeconds } from '../lib/utils.js';
+import { CardsInfo } from '../types/Card.js';
+import type { CreateFederationConfigParams } from '../types/Federation.js';
+import {
+  InternalTransactionParams,
+  LNURLTransferType,
+  SendTransactionParams,
+  Transaction,
+  TransferTypes,
+} from '../types/Transaction.js';
+import { Card } from './Card.js';
+import { Federation } from './Federation.js';
+import { FetchParameters, Identity } from './Identity.js';
+import lightBolt11 from '../lib/light-bolt11.js';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -152,16 +164,6 @@ export class Wallet extends Identity {
     return createInvoice({ callback: lnurlpData.callback, milisatoshis, comment });
   }
 
-  prepareInternalTransaction(to: string, amount: number): NostrEvent {
-    console.log(to, amount);
-    return {} as NostrEvent;
-  }
-
-  prepareExternalTransaction(to: string, amount: number, tags: NDKTag[]): NostrEvent {
-    console.log(to, amount, tags);
-    return {} as NostrEvent;
-  }
-
   async signEvent(event: Partial<NostrEvent>): Promise<NostrEvent> {
     if (!this.signer) throw new Error('Signer not found');
 
@@ -184,8 +186,99 @@ export class Wallet extends Identity {
     }
   }
 
-  sendTransaction(transaction: string): boolean {
-    console.log(transaction);
-    return true;
+  async sendTransaction(params: SendTransactionParams) {
+    if (!this.lnurlpData) await this.fetch();
+
+    const {
+      amount: maxAmount,
+      lnurlpData,
+      type,
+      data,
+    }: LNURLTransferType = await formatLNURLData(params.to, this.federation);
+    if (!lnurlpData) throw new Error('Malformed receptor');
+
+    if (
+      (maxAmount > 0 && params.amount !== maxAmount) ||
+      (lnurlpData.maxSendable && params.amount > lnurlpData.maxSendable)
+    )
+      throw new Error('The amount is invalid');
+
+    let metadata: { sender?: string; receiver?: string } = {};
+
+    if (data.includes('@')) metadata['receiver'] = data;
+    if (this.walias) metadata['sender'] = this.walias;
+
+    switch (type) {
+      case TransferTypes.INTERNAL: {
+        if (!lnurlpData.accountPubKey) throw new Error('Cannot send internal transfer without accountPubkey');
+        if (lnurlpData.accountPubKey === this.pubkey) throw new Error('You cannot send yourself');
+
+        return this.sendInternalTransaction({
+          tokenId: params.tokenId,
+          receiverPubkey: lnurlpData.accountPubKey,
+          amount: params.amount,
+          comment: params.comment,
+          metadata,
+        });
+      }
+
+      case TransferTypes.LUD16 || TransferTypes.LNURL: {
+        const { pr } = await createInvoice({
+          callback: lnurlpData.callback,
+          milisatoshis: params.amount,
+          comment: params.comment,
+        });
+        if (!pr) throw new Error('The invoice could not be generated');
+
+        return this.payInvoice(pr, metadata);
+      }
+    }
+  }
+
+  async payInvoice(paymentRequest: string, metadata: Record<string, string> = {}) {
+    const invoiceInfo = lightBolt11.decode(paymentRequest);
+
+    if (!invoiceInfo || !invoiceInfo.millisatoshis) throw new Error('Malformed payment request');
+
+    if (invoiceInfo.timeExpireDate && Number(invoiceInfo.timeExpireDate) * 1000 < Date.now())
+      throw new Error('Payment request expired');
+
+    const metadataTag: NDKTag = await encryptMetadataTag(this.signer, this.federation.modulePubkeys.urlx, metadata);
+
+    const txStartEvent = await this.signEvent(
+      buildTxStartEvent({
+        tokenId: 'BTC',
+        amount: Number(invoiceInfo.millisatoshis),
+        senderPubkey: this.pubkey,
+        tags: [['p', this.federation.modulePubkeys.urlx], ['bolt11', paymentRequest], metadataTag],
+      }),
+    );
+
+    if (!txStartEvent) throw new Error('Error on create start event');
+
+    return this.federation.httpPublish(txStartEvent);
+  }
+
+  async sendInternalTransaction(params: InternalTransactionParams) {
+    const { tokenId, receiverPubkey, amount, comment = '', metadata = {} } = params;
+
+    const metadataTag: NDKTag = await encryptMetadataTag(this.signer, receiverPubkey, metadata);
+
+    const txStartEvent = await this.signEvent(
+      buildTxStartEvent(
+        {
+          tokenId,
+          amount,
+          senderPubkey: this.pubkey,
+          comment,
+          tags: [['p', receiverPubkey], metadataTag],
+        },
+        this.federation,
+      ),
+    );
+
+    if (!txStartEvent) throw new Error('Error on create start event');
+
+    return this.federation.httpPublish(txStartEvent);
   }
 }

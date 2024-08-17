@@ -1,14 +1,48 @@
-import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
-import { LaWalletKinds, LaWalletTags } from '../constants/nostr';
-import { startTags, statusTags } from '../constants/tags';
-import { Wallet } from '../exports';
-import { ModulePubkeysConfigType } from '../types/Federation';
-import { Transaction, TransactionDirection, TransactionStatus, TransactionType } from '../types/Transaction';
-import { getMultipleTagsValues, getTagValue, parseContent } from './utils';
+import { NDKEvent, NDKFilter, NDKKind, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import { Federation } from '../class/Federation.js';
+import { Wallet } from '../class/Wallet.js';
+import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
+import { startTags, statusTags } from '../constants/tags.js';
+import { ModulePubkeysConfigType } from '../types/Federation.js';
+import {
+  InvoiceTransferType,
+  LNURLTransferType,
+  Transaction,
+  TransactionDirection,
+  TransactionParams,
+  TransactionStatus,
+  TransactionType,
+  TransferTypes,
+} from '../types/Transaction.js';
+import { Api } from './api.js';
+import { lnurl_decode } from './lnurl.js';
+import {
+  getMultipleTagsValues,
+  getTagValue,
+  normalizeLightningDomain,
+  nowInSeconds,
+  parseContent,
+  validateEmail,
+} from './utils.js';
+import { extendedEncrypt } from './nip04.js';
 
 type EventWithStatus = {
   startEvent: NDKEvent | undefined;
   statusEvent: NDKEvent | undefined;
+};
+
+const defaultInvoiceTransfer: InvoiceTransferType = {
+  data: '',
+  amount: 0,
+  type: TransferTypes.NONE,
+  expired: false,
+};
+
+const defaultLNURLTransfer: LNURLTransferType = {
+  data: '',
+  amount: 0,
+  type: TransferTypes.NONE,
+  lnurlpData: null,
 };
 
 export function transactionsFilters(
@@ -203,3 +237,194 @@ export async function parseTransactionsEvents(wallet: Wallet, events: NDKEvent[]
 
   return transactions;
 }
+
+export const detectTransferType = (data: string): TransferTypes => {
+  if (!data.length) return TransferTypes.NONE;
+
+  const upperStr: string = data.toUpperCase();
+  const isLUD16 = validateEmail(upperStr);
+  if (isLUD16) return TransferTypes.LUD16;
+
+  if (upperStr.startsWith('LNURL')) return TransferTypes.LNURL;
+  if (upperStr.startsWith('LNBC')) return TransferTypes.INVOICE;
+
+  return TransferTypes.INTERNAL;
+};
+
+const removeHttpOrHttps = (str: string) => {
+  if (str.startsWith('http://')) return str.replace('http://', '');
+  if (str.startsWith('https://')) return str.replace('https://', '');
+
+  return str;
+};
+
+const getLnUrlpData = async (callback: string) => {
+  const api = Api();
+  const response = await api.get(callback);
+
+  return response;
+};
+
+const parseLNURLInfo = async (data: string, federation: Federation = new Federation()): Promise<LNURLTransferType> => {
+  const decodedLNURL = lnurl_decode(data);
+
+  const lnurlpData = await getLnUrlpData(decodedLNURL);
+  if (!lnurlpData) return defaultLNURLTransfer;
+
+  const transfer: LNURLTransferType = {
+    ...defaultLNURLTransfer,
+    data,
+    type: TransferTypes.LNURL,
+    lnurlpData,
+  };
+
+  if (lnurlpData.tag === 'withdrawRequest') {
+    return {
+      ...transfer,
+      type: TransferTypes.LNURLW,
+      amount: lnurlpData.maxWithdrawable! / 1000,
+    };
+  }
+
+  const decodedWithoutHttps: string = removeHttpOrHttps(decodedLNURL).replace('www.', '');
+  const [domain, username] = decodedWithoutHttps.includes('/.well-known/lnurlp/')
+    ? decodedWithoutHttps.split('/.well-known/lnurlp/')
+    : decodedWithoutHttps.split('/lnurlp/');
+
+  if (lnurlpData && lnurlpData.tag === 'payRequest') {
+    const amount: number = lnurlpData.minSendable! === lnurlpData.maxSendable! ? lnurlpData.maxSendable! / 1000 : 0;
+
+    try {
+      if (lnurlpData.federationId && lnurlpData.federationId === federation.id) {
+        return {
+          ...transfer,
+          data: username && domain ? `${username}@${domain}` : data,
+          type: TransferTypes.INTERNAL,
+          amount,
+        };
+      } else {
+        const parsedMetadata: Array<string>[] = JSON.parse(lnurlpData.metadata);
+        const identifier: string[] | undefined = parsedMetadata.find((data: string[]) => {
+          if (data[0] === 'text/identifier') return data;
+        });
+
+        if (identifier && identifier.length === 2) return { ...transfer, data: identifier[1]!, amount };
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  return {
+    ...transfer,
+    data: username && domain ? `${username}@${domain}` : data,
+  };
+};
+
+export const splitHandle = (handle: string, federation: Federation = new Federation()): string[] => {
+  if (!handle.length) return [];
+
+  try {
+    if (handle.includes('@')) {
+      const [username, domain] = handle.split('@');
+      return [username!, domain!];
+    } else {
+      return [handle, normalizeLightningDomain(federation.lightningDomain)];
+    }
+  } catch {
+    return [];
+  }
+};
+
+const parseLUD16Info = async (data: string, federation: Federation = new Federation()): Promise<LNURLTransferType> => {
+  const [username, domain] = splitHandle(data, federation);
+  const federationDomain = normalizeLightningDomain(federation.lightningDomain);
+
+  const lnurlpData =
+    federationDomain === domain
+      ? await federation.getLnUrlpData(username)
+      : await getLnUrlpData(`https://${domain}/.well-known/lnurlp/${username}`);
+
+  if (!lnurlpData) return defaultLNURLTransfer;
+
+  const amount: number = lnurlpData.minSendable === lnurlpData.maxSendable ? lnurlpData.maxSendable! / 1000 : 0;
+
+  const transfer: LNURLTransferType = {
+    ...defaultLNURLTransfer,
+    data,
+    amount,
+    type: TransferTypes.LUD16,
+    lnurlpData,
+  };
+
+  if (lnurlpData.federationId && lnurlpData.federationId === federation.id) {
+    return {
+      ...transfer,
+      type: TransferTypes.INTERNAL,
+    };
+  }
+
+  return transfer;
+};
+
+export const removeLightningStandard = (str: string) => {
+  const lowStr: string = str.toLowerCase();
+
+  if (lowStr.startsWith('lightning://')) return lowStr.replace('lightning://', '');
+  if (lowStr.startsWith('lightning:')) return lowStr.replace('lightning:', '');
+  if (lowStr.startsWith('lnurlw://')) return lowStr.replace('lnurlw://', '');
+
+  return lowStr;
+};
+
+export const formatLNURLData = async (
+  data: string,
+  federation: Federation = new Federation(),
+): Promise<LNURLTransferType> => {
+  if (!data.length) return defaultLNURLTransfer;
+  const cleanStr: string = removeLightningStandard(data);
+
+  const decodedTransferType: TransferTypes = detectTransferType(cleanStr);
+  if (decodedTransferType === TransferTypes.NONE || decodedTransferType === TransferTypes.INVOICE)
+    return defaultLNURLTransfer;
+
+  switch (true) {
+    case decodedTransferType === TransferTypes.LUD16 || decodedTransferType === TransferTypes.INTERNAL:
+      return parseLUD16Info(cleanStr, federation);
+
+    default:
+      return parseLNURLInfo(cleanStr, federation);
+  }
+};
+
+export const buildTxStartEvent = (props: TransactionParams, federation: Federation = new Federation()): NostrEvent => {
+  const { tokenId, amount, senderPubkey, comment, tags = [] } = props;
+
+  const txTags: NDKTag[] = [
+    ['t', LaWalletTags.INTERNAL_TRANSACTION_START],
+    ['p', federation.modulePubkeys.ledger],
+    ...tags,
+  ];
+
+  return {
+    pubkey: senderPubkey,
+    kind: LaWalletKinds.REGULAR,
+    content: JSON.stringify({
+      tokens: { [tokenId]: amount.toString() },
+      ...(comment ? { memo: comment } : {}),
+    }),
+    tags: txTags,
+    created_at: nowInSeconds(),
+  };
+};
+
+export const encryptMetadataTag = async (
+  signer: NDKSigner,
+  receiverPubkey: string,
+  metadata: Record<string, string>,
+): Promise<NDKTag> => {
+  const metadataEncrypted: string = await extendedEncrypt(signer, receiverPubkey, JSON.stringify(metadata));
+
+  const metadataTag: NDKTag = ['metadata', 'true', 'nip04', metadataEncrypted];
+  return metadataTag;
+};

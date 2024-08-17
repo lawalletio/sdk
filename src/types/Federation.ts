@@ -1,4 +1,4 @@
-import { LAWALLET_DEFAULT_CONFIG } from '../constants/config';
+import { LAWALLET_DEFAULT_CONFIG } from '../constants/config.js';
 
 export type EndpointsConfigType = {
   lightningDomain: string;

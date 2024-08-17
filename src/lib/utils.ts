@@ -1,5 +1,5 @@
 import { NDKTag } from '@nostr-dev-kit/ndk';
-import { Api } from './api';
+import { Api } from './api.js';
 
 export const nowInSeconds = (): number => {
   return Math.floor(Date.now() / 1000);
@@ -16,6 +16,12 @@ export const normalizeLightningDomain = (lightningDomain: string) => {
 
 export const parseWalias = (username: string, lightningDomain: string) => {
   return `${username}@${normalizeLightningDomain(lightningDomain)}`;
+};
+
+export const validateEmail = (email: string): RegExpMatchArray | null => {
+  return email.match(
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+  );
 };
 
 export function hexToUint8Array(hex: string): Uint8Array {
@@ -102,3 +108,12 @@ export async function createInvoice(params: InvoiceParams) {
   if (!response) throw new Error('An error occurred while creating a invoice');
   return response;
 }
+
+// export const decodeInvoice = (invoice: string): DecodedInvoiceReturns | undefined => {
+//   try {
+//     const decodedInvoice = lightBolt11.decode(invoice);
+//     return decodedInvoice;
+//   } catch {
+//     return;
+//   }
+// };

@@ -1,4 +1,5 @@
-import { type NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKTag, type NostrEvent } from '@nostr-dev-kit/ndk';
+import { LNRequestResponse } from './LnUrl.js';
 
 export interface Transaction {
   id: string;
@@ -11,6 +12,28 @@ export interface Transaction {
   events: NostrEvent[];
   createdAt: number;
   metadata?: Record<string, string>;
+}
+
+export type TransactionParams = {
+  tokenId: string;
+  amount: number;
+  senderPubkey: string;
+  comment?: string;
+  tags: NDKTag[];
+};
+
+export interface TransferInformation {
+  data: string;
+  amount: number;
+  type: TransferTypes;
+}
+
+export interface LNURLTransferType extends TransferInformation {
+  lnurlpData: LNRequestResponse | null;
+}
+
+export interface InvoiceTransferType extends TransferInformation {
+  expired: boolean;
 }
 
 export enum TransferTypes {
@@ -42,4 +65,19 @@ export enum TransactionType {
 
 export type TokensAmount = {
   [_tokenId: string]: number;
+};
+
+export type SendTransactionParams = {
+  tokenId: string;
+  to: string;
+  amount: number;
+  comment?: string;
+};
+
+export type InternalTransactionParams = {
+  tokenId: string;
+  receiverPubkey: string;
+  amount: number;
+  comment?: string;
+  metadata?: Record<string, string>;
 };

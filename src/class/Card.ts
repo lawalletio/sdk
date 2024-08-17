@@ -1,6 +1,6 @@
 import { NostrEvent } from '@nostr-dev-kit/ndk';
-import { Wallet } from '../exports';
-import { buildDonationEvent, calculateDelta, createCardConfigEvent } from '../lib/cards';
+import { Wallet } from '../exports/index.js';
+import { buildDonationEvent, calculateDelta, createCardConfigEvent } from '../lib/cards.js';
 import {
   CardLimitParams,
   CardMetadataParams,
@@ -8,7 +8,7 @@ import {
   type CardPayload,
   type Design,
   type Limit,
-} from '../types/Card';
+} from '../types/Card.js';
 
 interface CardData {
   uuid: string;

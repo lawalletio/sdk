@@ -1,4 +1,4 @@
-import { LaWalletTags } from './nostr';
+import { LaWalletTags } from './nostr.js';
 
 export const startTags: string[] = [LaWalletTags.INTERNAL_TRANSACTION_START, LaWalletTags.INBOUND_TRANSACTION_START];
 

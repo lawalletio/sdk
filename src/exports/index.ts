@@ -1,8 +1,10 @@
-Object.assign(global, { WebSocket: require('ws') });
+import WebSocket from 'ws';
 
-export { Federation } from '../class/Federation';
-export { Identity } from '../class/Identity';
-export { Wallet } from '../class/Wallet';
-export { Client } from '../class/Client';
+export { Federation } from '../class/Federation.js';
+export { Identity } from '../class/Identity.js';
+export { Wallet } from '../class/Wallet.js';
+export { Client } from '../class/Client.js';
 
-export { createFederationConfig } from '../lib/createFederationConfig';
+export { createFederationConfig } from '../lib/createFederationConfig.js';
+
+Object.assign(global, { WebSocket });
