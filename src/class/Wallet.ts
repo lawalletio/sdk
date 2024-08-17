@@ -30,7 +30,6 @@ type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
   ndk?: NDK;
   federationConfig?: CreateFederationConfigParams;
-  fetchParams?: FetchParameters;
 };
 
 type ZapParams = {
@@ -54,7 +53,7 @@ export class Wallet extends Identity {
       // TODO: Refactor the way to retrieve the public key
       const pubkey = getPublicKey(hexToUint8Array(signer.privateKey));
 
-      super({ pubkey, ndk, federation, fetchParams: params?.fetchParams });
+      super({ pubkey, ndk, federation, fetchParams: { enabled: true } });
 
       this._signer = signer;
     } catch (err) {
