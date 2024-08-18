@@ -1,4 +1,4 @@
-import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
+import { NDKEvent, NDKKind, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getEventHash, getPublicKey, getSignature, nip26, UnsignedEvent } from 'nostr-tools';
 import { Card } from '../class/Card.js';
 import { Federation } from '../class/Federation.js';
@@ -15,6 +15,7 @@ import {
 } from '../types/Card.js';
 import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04.js';
 import { getTagValue, nowInSeconds, parseContent } from './utils.js';
+import { Api } from './api.js';
 
 export function cardsFilter(pubkey: string, cardPubkey: string) {
   return [
@@ -196,3 +197,46 @@ export const buildCardTransferAcceptEvent = async (
 
   return event;
 };
+
+export const buildCardActivationEvent = async (
+  otc: string,
+  privateKey: string,
+  federation: Federation = new Federation(),
+): Promise<NostrEvent> => {
+  const signer = new NDKPrivateKeySigner(privateKey);
+  const userPubkey: string = getPublicKey(privateKey);
+
+  const delegation = nip26.createDelegation(privateKey, {
+    pubkey: federation.modulePubkeys.card,
+    kind: LaWalletKinds.REGULAR,
+    since: Math.floor(Date.now() / 1000) - 36000,
+    until: Math.floor(Date.now() / 1000) + 3600 * 24 * 30 * 12,
+  });
+
+  const event: NDKEvent = new NDKEvent();
+  event.pubkey = userPubkey;
+  event.kind = LaWalletKinds.EPHEMERAL;
+
+  event.content = JSON.stringify({
+    otc,
+    delegation: {
+      conditions: delegation.cond,
+      token: delegation.sig,
+    },
+  });
+
+  event.tags = [
+    ['p', federation.modulePubkeys.card],
+    ['t', LaWalletTags.CARD_ACTIVATION_REQUEST],
+  ];
+
+  await event.sign(signer);
+  return event.toNostrEvent();
+};
+
+export async function activateCard(event: NostrEvent, federation: Federation = new Federation()) {
+  const api = Api();
+  const response = await api.post(`${federation.apiGateway}/card`, { body: JSON.stringify(event) }, false);
+
+  return response.status >= 200 && response.status < 300;
+}

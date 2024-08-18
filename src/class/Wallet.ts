@@ -1,7 +1,13 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
 import { LaWalletKinds } from '../constants/nostr.js';
-import { buildCardTransferAcceptEvent, cardsFilter, parseCardsEvents } from '../lib/cards.js';
+import {
+  activateCard,
+  buildCardActivationEvent,
+  buildCardTransferAcceptEvent,
+  cardsFilter,
+  parseCardsEvents,
+} from '../lib/cards.js';
 import { buildZapRequestEvent } from '../lib/events.js';
 import lightBolt11 from '../lib/light-bolt11.js';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
@@ -307,13 +313,14 @@ export class Wallet extends Identity {
       this.federation,
     );
 
-    const api = Api();
-    const response = await api.post(
-      `${this.federation.apiGateway}/card`,
-      { body: JSON.stringify(cardAcceptEvent) },
-      false,
-    );
+    return activateCard(cardAcceptEvent, this.federation);
+  }
 
-    return response.status >= 200 && response.status < 300;
+  async addCard(nonce: string) {
+    let sk = (this._signer as NDKPrivateKeySigner).privateKey;
+    if (!sk) throw new Error('You cannot sign a delegation without a private key');
+
+    const cardActivationEvent: NostrEvent = await buildCardActivationEvent(nonce, sk, this.federation);
+    return activateCard(cardActivationEvent, this.federation);
   }
 }

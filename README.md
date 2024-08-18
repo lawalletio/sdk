@@ -53,6 +53,8 @@ Alice.getTransactions().then((transactions) => {
 ### Cards
 
 ```ts
+Alice.addCard('CARD_NONCE');
+
 Alice.getCards().then(async (cards) => {
   if (cards.length) {
     // Get first card
@@ -149,8 +151,8 @@ Alice.sendTransaction({
     - [x] onError()
   - [x] payInvoice
   - [x] claimCardTransfer
+  - [x] addCard / activateCard
   - [ ] registerHandle (request + payment + claim)
-  - [ ] addCard / activateCard
 - [ ] Client
 
   - [ ] Multiples accounts
