@@ -72,7 +72,7 @@ export class Identity {
 
       this._username = username;
 
-      let lnurlpData = await this._federation.getLnUrlpData(username);
+      let lnurlpData = this.lnurlpData || (await this._federation.getLnUrlpData(username));
       this._ln = lnurlpData;
 
       return {

@@ -20,10 +20,10 @@ pnpm add @lawallet/sdk @nostr-dev-kit/ndk
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { Wallet } from '@lawallet/sdk';
 
-const signer = NDKPrivateKeySigner.generate();
-const wallet = new Wallet({ signer });
+const Alice = new Wallet({ signer: NDKPrivateKeySigner.generate() });
+const Bob = new Wallet({ signer: NDKPrivateKeySigner.generate() });
 
-wallet.fetch().then(({ lnurlpData, nostr }) => {
+Alice.fetch().then(({ lnurlpData, nostr }) => {
   // returns lnurlpData -> /.well-known/lnurlp/<user> response
   console.log('lnurlpData: ', lnurlpData);
 
@@ -36,7 +36,7 @@ wallet.fetch().then(({ lnurlpData, nostr }) => {
 
 ```ts
 // Returns BTC balance in millisatoshis
-wallet.getBalance('BTC').then((bal) => {
+Alice.getBalance('BTC').then((bal) => {
   console.log(`Account BTC Balance: ${bal} milisatoshis ~ ${(bal / 100000000).toFixed(8)} BTC`);
 });
 ```
@@ -45,7 +45,7 @@ wallet.getBalance('BTC').then((bal) => {
 
 ```ts
 // Returns all transactions
-wallet.getTransactions().then((transactions) => {
+Alice.getTransactions().then((transactions) => {
   console.log('Total account transactions: ', transactions.length);
 });
 ```
@@ -53,7 +53,7 @@ wallet.getTransactions().then((transactions) => {
 ### Cards
 
 ```ts
-wallet.getCards().then(async (cards) => {
+Alice.getCards().then(async (cards) => {
   if (cards.length) {
     // Get first card
     let firstCard = cards[0];
@@ -74,6 +74,9 @@ wallet.getCards().then(async (cards) => {
 
     // Prepare the event to transfer the card
     const transferEvent = await firstCard.createTransferEvent();
+
+    // Claim card with another account
+    await Bob.claimCardTransfer(transferEvent);
   }
 });
 ```
@@ -81,18 +84,26 @@ wallet.getCards().then(async (cards) => {
 ### Payments
 
 ```ts
-wallet.generateInvoice({ milisatoshis: 1000 }).then((invoice) => {
+Alice.generateInvoice({ milisatoshis: 1000 }).then((invoice) => {
   // Generate payment request of this wallet
   console.log(invoice.pr);
 });
 
-wallet.createZap({ milisatoshis: 1000, receiverPubkey: '...' }).then((invoice) => {
+Alice.createZap({ milisatoshis: 1000, receiverPubkey: Bob.pubkey }).then((invoice) => {
   // Generate zap request -> returns payment request of zap request
-  console.log(invoice.pr);
+  const { pr: paymentRequest } = invoice;
+
+  // Pay invoice
+  Alice.payInvoice({
+    paymentRequest,
+    onSuccess: () => {
+      console.log('Invoice paid successfully');
+    },
+  });
 });
 
 // Send transaction
-wallet.sendTransaction({
+Alice.sendTransaction({
   tokenId: 'BTC',
   receiver: 'cuervo@lawallet.ar',
   amount: 1000,
@@ -104,9 +115,6 @@ wallet.sendTransaction({
     console.log('An error occurred with the transaction');
   },
 });
-
-// Pay invoice
-wallet.payInvoice('lnbc1...');
 ```
 
 ## To - do

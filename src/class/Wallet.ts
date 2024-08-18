@@ -296,16 +296,21 @@ export class Wallet extends Identity {
     });
   }
 
-  async claimCardTransfer(event: NostrEvent) {
+  async claimCardTransfer(donationEvent: NostrEvent) {
     let sk = (this._signer as NDKPrivateKeySigner).privateKey;
     if (!sk) throw new Error('You cannot sign a delegation without a private key');
 
-    const buildedEvent: NostrEvent = await buildCardTransferAcceptEvent(event.pubkey, event, sk, this.federation);
+    const cardAcceptEvent: NostrEvent = await buildCardTransferAcceptEvent(
+      donationEvent.pubkey,
+      donationEvent,
+      sk,
+      this.federation,
+    );
 
     const api = Api();
     const response = await api.post(
       `${this.federation.apiGateway}/card`,
-      { body: JSON.stringify(buildedEvent) },
+      { body: JSON.stringify(cardAcceptEvent) },
       false,
     );
 
