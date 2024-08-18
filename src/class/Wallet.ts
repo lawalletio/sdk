@@ -1,7 +1,7 @@
 import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
 import { LaWalletKinds } from '../constants/nostr.js';
-import { cardsFilter, parseCardsEvents } from '../lib/cards.js';
+import { buildCardTransferAcceptEvent, cardsFilter, parseCardsEvents } from '../lib/cards.js';
 import { buildZapRequestEvent } from '../lib/events.js';
 import lightBolt11 from '../lib/light-bolt11.js';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
@@ -13,7 +13,7 @@ import {
   parseTransactionsEvents,
   transactionsFilters,
 } from '../lib/transactions.js';
-import { createInvoice, hexToUint8Array, nowInSeconds } from '../lib/utils.js';
+import { createInvoice, nowInSeconds } from '../lib/utils.js';
 import { CardsInfo } from '../types/Card.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import {
@@ -27,6 +27,7 @@ import {
 import { Card } from './Card.js';
 import { Federation } from './Federation.js';
 import { Identity } from './Identity.js';
+import { Api } from '../lib/api.js';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -52,8 +53,7 @@ export class Wallet extends Identity {
       const federation = new Federation(params?.federationConfig);
       const ndk = params?.ndk ?? createNDKInstance(federation.relaysList, signer);
 
-      // TODO: Refactor the way to retrieve the public key
-      const pubkey = getPublicKey(hexToUint8Array(signer.privateKey));
+      const pubkey = getPublicKey(signer.privateKey);
 
       super({ pubkey, ndk, federation, fetchParams: { enabled: true } });
 
@@ -294,5 +294,21 @@ export class Wallet extends Identity {
       onSuccess,
       onError,
     });
+  }
+
+  async claimCardTransfer(event: NostrEvent) {
+    let sk = (this._signer as NDKPrivateKeySigner).privateKey;
+    if (!sk) throw new Error('You cannot sign a delegation without a private key');
+
+    const buildedEvent: NostrEvent = await buildCardTransferAcceptEvent(event.pubkey, event, sk, this.federation);
+
+    const api = Api();
+    const response = await api.post(
+      `${this.federation.apiGateway}/card`,
+      { body: JSON.stringify(buildedEvent) },
+      false,
+    );
+
+    return response.status >= 200 && response.status < 300;
   }
 }

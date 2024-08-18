@@ -140,10 +140,11 @@ wallet.payInvoice('lnbc1...');
     - [x] onSuccess()
     - [x] onError()
   - [x] payInvoice
+  - [x] claimCardTransfer
   - [ ] registerHandle (request + payment + claim)
   - [ ] addCard / activateCard
-  - [ ] claimCard
 - [ ] Client
+
   - [ ] Multiples accounts
     - [ ] accounts
     - [ ] addAccount
@@ -151,3 +152,9 @@ wallet.payInvoice('lnbc1...');
   - [ ] Watch transactions
   - [ ] Create event filter
   - [ ] get Transaction (txId)
+
+- [ ] Tests coverage
+  - [ ] Federation
+  - [ ] Identity
+  - [ ] Wallet
+  - [ ] Client

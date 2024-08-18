@@ -1,5 +1,7 @@
 import { NDKEvent, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk';
+import { getEventHash, getPublicKey, getSignature, nip26, UnsignedEvent } from 'nostr-tools';
 import { Card } from '../class/Card.js';
+import { Federation } from '../class/Federation.js';
 import { Wallet } from '../class/Wallet.js';
 import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
 import {
@@ -155,3 +157,42 @@ export async function buildDonationEvent(card: Card): Promise<NostrEvent | undef
     return;
   }
 }
+
+export const buildCardTransferAcceptEvent = async (
+  giverPubkey: string,
+  donationEvent: NostrEvent,
+  privateKey: string,
+  federation: Federation = new Federation(),
+) => {
+  const userPubkey: string = getPublicKey(privateKey);
+
+  const delegation = nip26.createDelegation(privateKey, {
+    pubkey: federation.modulePubkeys.card,
+    kind: LaWalletKinds.REGULAR,
+    since: Math.floor(Date.now() / 1000) - 36000,
+    until: Math.floor(Date.now() / 1000) + 3600 * 24 * 30 * 12,
+  });
+
+  const event: NostrEvent = {
+    kind: LaWalletKinds.EPHEMERAL,
+    pubkey: userPubkey,
+    content: JSON.stringify({
+      delegation: {
+        conditions: delegation.cond,
+        token: delegation.sig,
+      },
+      donationEvent,
+    }),
+    created_at: nowInSeconds(),
+    tags: [
+      ['t', LaWalletTags.CARD_TRANSFER_ACCEPTANCE],
+      ['p', federation.modulePubkeys.card],
+      ['p', giverPubkey],
+    ],
+  };
+
+  event.id = getEventHash(event as UnsignedEvent);
+  event.sig = getSignature(event as UnsignedEvent, privateKey);
+
+  return event;
+};
