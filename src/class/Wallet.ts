@@ -34,6 +34,7 @@ import { Card } from './Card.js';
 import { Federation } from './Federation.js';
 import { Identity } from './Identity.js';
 import { Api } from '../lib/api.js';
+import { hexToBytes } from '@noble/hashes/utils';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -59,7 +60,7 @@ export class Wallet extends Identity {
       const federation = new Federation(params?.federationConfig);
       const ndk = params?.ndk ?? createNDKInstance(federation.relaysList, signer);
 
-      const pubkey = getPublicKey(signer.privateKey);
+      const pubkey = getPublicKey(hexToBytes(signer.privateKey));
 
       super({ pubkey, ndk, federation, fetchParams: { enabled: true } });
 

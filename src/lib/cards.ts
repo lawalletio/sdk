@@ -1,5 +1,5 @@
 import { NDKEvent, NDKKind, NDKPrivateKeySigner, NostrEvent } from '@nostr-dev-kit/ndk';
-import { getEventHash, getPublicKey, getSignature, nip26, UnsignedEvent } from 'nostr-tools';
+import { EventTemplate, finalizeEvent, getEventHash, getPublicKey, nip26, UnsignedEvent } from 'nostr-tools';
 import { Card } from '../class/Card.js';
 import { Federation } from '../class/Federation.js';
 import { Wallet } from '../class/Wallet.js';
@@ -16,6 +16,7 @@ import {
 import { extendedDecrypt, extendedEncrypt, extendedMultiNip04Decrypt, extendedMultiNip04Encrypt } from './nip04.js';
 import { getTagValue, nowInSeconds, parseContent } from './utils.js';
 import { Api } from './api.js';
+import { hexToBytes } from '@noble/hashes/utils';
 
 export function cardsFilter(pubkey: string, cardPubkey: string) {
   return [
@@ -165,8 +166,6 @@ export const buildCardTransferAcceptEvent = async (
   privateKey: string,
   federation: Federation = new Federation(),
 ) => {
-  const userPubkey: string = getPublicKey(privateKey);
-
   const delegation = nip26.createDelegation(privateKey, {
     pubkey: federation.modulePubkeys.card,
     kind: LaWalletKinds.REGULAR,
@@ -174,9 +173,8 @@ export const buildCardTransferAcceptEvent = async (
     until: Math.floor(Date.now() / 1000) + 3600 * 24 * 30 * 12,
   });
 
-  const event: NostrEvent = {
+  const event: EventTemplate = {
     kind: LaWalletKinds.EPHEMERAL,
-    pubkey: userPubkey,
     content: JSON.stringify({
       delegation: {
         conditions: delegation.cond,
@@ -192,10 +190,7 @@ export const buildCardTransferAcceptEvent = async (
     ],
   };
 
-  event.id = getEventHash(event as UnsignedEvent);
-  event.sig = getSignature(event as UnsignedEvent, privateKey);
-
-  return event;
+  return finalizeEvent(event, hexToBytes(privateKey));
 };
 
 export const buildCardActivationEvent = async (
@@ -204,7 +199,7 @@ export const buildCardActivationEvent = async (
   federation: Federation = new Federation(),
 ): Promise<NostrEvent> => {
   const signer = new NDKPrivateKeySigner(privateKey);
-  const userPubkey: string = getPublicKey(privateKey);
+  const userPubkey: string = getPublicKey(hexToBytes(privateKey));
 
   const delegation = nip26.createDelegation(privateKey, {
     pubkey: federation.modulePubkeys.card,
