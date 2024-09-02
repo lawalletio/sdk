@@ -467,6 +467,8 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
       NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true),
     );
 
+    let handledResponse = false;
+
     const t2 = setTimeout(() => {
       s.stop();
       if (onError) onError('Unexpected error');
@@ -478,12 +480,12 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
       let nostrEvent = await event.toNostrEvent();
 
       let tTag = event.getMatchingTags('t')[0][1];
-      if (tTag) {
+      if (tTag && !handledResponse) {
         if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
         if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
+        handledResponse = true;
       }
 
-      if (onSuccess) onSuccess(nostrEvent);
       if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
       resolve(event);
     });
