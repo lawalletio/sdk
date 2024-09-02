@@ -455,6 +455,7 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
 
     const t2 = setTimeout(() => {
       s.stop();
+      if (onError) onError('Error');
       if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
       resolve(null);
     }, 10000);
@@ -470,7 +471,6 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
     s.on('eose', () => {
       clearTimeout(t2);
 
-      if (onError) onError('Error');
       if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
       resolve(null);
     });

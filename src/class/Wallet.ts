@@ -59,6 +59,7 @@ export class Wallet extends Identity {
     try {
       const federation = new Federation(params?.federationConfig);
       const ndk = params?.ndk ?? createNDKInstance(federation.relaysList, signer);
+      if (params?.ndk) ndk.signer = signer;
 
       const pubkey = getPublicKey(hexToBytes(signer.privateKey));
 
