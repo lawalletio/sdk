@@ -2,10 +2,6 @@
 
 SDK for LaWallet
 
-## Important
-
-This package is under development and is not yet available on npm.
-
 ## Installation
 
 ```bash
@@ -153,15 +149,6 @@ Alice.sendTransaction({
   - [x] claimCardTransfer
   - [x] addCard / activateCard
   - [ ] registerHandle (request + payment + claim)
-- [ ] Client
-
-  - [ ] Multiples accounts
-    - [ ] accounts
-    - [ ] addAccount
-    - [ ] removeAccount
-  - [ ] Watch transactions
-  - [ ] Create event filter
-  - [ ] get Transaction (txId)
 
 - [ ] Tests coverage
   - [ ] Federation
