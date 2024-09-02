@@ -471,7 +471,6 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
           });
 
           if (statusEvent) {
-            console.log('resolviendo estado');
             let nostrEvent = await statusEvent.toNostrEvent();
             let tTag = statusEvent.getMatchingTags('t')[0][1];
 
