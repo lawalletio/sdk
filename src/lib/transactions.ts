@@ -11,7 +11,7 @@ import {
 import { Federation } from '../class/Federation.js';
 import { Wallet } from '../class/Wallet.js';
 import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
-import { startTags, statusTags } from '../constants/tags.js';
+import { errorTags, startTags, statusTags, successTags } from '../constants/tags.js';
 import { ModulePubkeysConfigType } from '../types/Federation.js';
 import {
   ExecuteTransactionParams,
@@ -469,13 +469,19 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
 
     const t2 = setTimeout(() => {
       s.stop();
-      if (onError) onError('Error');
+      if (onError) onError('Unexpected error');
       if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
       resolve(null);
     }, 10000);
 
     s.on('event', async (event: NDKEvent) => {
       let nostrEvent = await event.toNostrEvent();
+
+      let tTag = event.getMatchingTags('t')[0][1];
+      if (tTag) {
+        if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
+        if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
+      }
 
       if (onSuccess) onSuccess(nostrEvent);
       if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
