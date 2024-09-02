@@ -3,6 +3,8 @@ import NDK, { NDKSigner } from '@nostr-dev-kit/ndk';
 export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK {
   const tmpNDK = new NDK({
     explicitRelayUrls: relaysList,
+    autoConnectUserRelays: false,
+    autoFetchUserMutelist: false,
     signer,
   });
 
@@ -10,15 +12,19 @@ export function createNDKInstance(relaysList: string[], signer?: NDKSigner): NDK
 }
 
 export async function checkRelaysConnection(ndk: NDK) {
-  if (ndk.pool.urls().length === 0) throw new Error('No relays found');
+  const relayUrls = ndk.pool.urls();
+  if (relayUrls.length === 0) throw new Error('No relays found');
 
-  let connectedRelays: number = ndk.pool.connectedRelays().length;
+  let connectedRelays = ndk.pool.connectedRelays().length;
 
-  if (connectedRelays === 0) {
-    await ndk.connect();
+  if (connectedRelays !== relayUrls.length) {
+    relayUrls.map((relayUrl: string) => {
+      let relay = ndk.pool.relays.get(relayUrl);
+      if (relay && !relay.connected) relay.connect();
+    });
+
     return false;
   }
-
   return true;
 }
 

@@ -1,4 +1,13 @@
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, {
+  NDKEvent,
+  NDKKind,
+  NDKPrivateKeySigner,
+  NDKRelay,
+  NDKRelaySet,
+  NDKSigner,
+  NDKTag,
+  NostrEvent,
+} from '@nostr-dev-kit/ndk';
 import { getPublicKey, UnsignedEvent } from 'nostr-tools';
 import { LaWalletKinds } from '../constants/nostr.js';
 import {
@@ -80,11 +89,15 @@ export class Wallet extends Identity {
     if (!this.ndk) throw new Error('No NDK instance found');
 
     const fnFetch = () =>
-      this.ndk.fetchEvent({
-        authors: [this.federation.modulePubkeys.ledger],
-        kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE as unknown as NDKKind],
-        '#d': [`balance:${tokenId}:${this.pubkey}`],
-      });
+      this.ndk.fetchEvent(
+        {
+          authors: [this.federation.modulePubkeys.ledger],
+          kinds: [LaWalletKinds.PARAMETRIZED_REPLACEABLE as unknown as NDKKind],
+          '#d': [`balance:${tokenId}:${this.pubkey}`],
+        },
+        { closeOnEose: true },
+        NDKRelaySet.fromRelayUrls(this.federation.relaysList, this.ndk, true),
+      );
 
     const event = await fetchToNDK<NDKEvent | null>(this.ndk, fnFetch);
 
@@ -116,9 +129,13 @@ export class Wallet extends Identity {
     const fnFetch = () => {
       let filters = cardsFilter(this.pubkey, this.federation.modulePubkeys.card);
 
-      return this.ndk.fetchEvents(filters, {
-        closeOnEose: true,
-      });
+      return this.ndk.fetchEvents(
+        filters,
+        {
+          closeOnEose: true,
+        },
+        NDKRelaySet.fromRelayUrls(this.federation.relaysList, this.ndk, true),
+      );
     };
 
     const cardsEvents = await fetchToNDK<Set<NDKEvent>>(this.ndk, fnFetch);

@@ -1,4 +1,13 @@
-import { NDKEvent, NDKFilter, NDKKind, NDKSigner, NDKTag, NostrEvent } from '@nostr-dev-kit/ndk';
+import {
+  NDKEvent,
+  NDKFilter,
+  NDKKind,
+  NDKRelaySet,
+  NDKSigner,
+  NDKSubscription,
+  NDKTag,
+  NostrEvent,
+} from '@nostr-dev-kit/ndk';
 import { Federation } from '../class/Federation.js';
 import { Wallet } from '../class/Wallet.js';
 import { LaWalletKinds, LaWalletTags } from '../constants/nostr.js';
@@ -451,7 +460,12 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
 
     let filters = receivedTransactionFilter(startEvent, federation.modulePubkeys.ledger);
 
-    const s = ndk.subscribe(filters, { closeOnEose: true }, undefined, false);
+    const s = new NDKSubscription(
+      ndk,
+      filters,
+      { closeOnEose: true },
+      NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true),
+    );
 
     const t2 = setTimeout(() => {
       s.stop();

@@ -1,6 +1,6 @@
 {
   "name": "@lawallet/sdk",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "description": "LaWallet software dev kit",
   "type": "module",
   "private": false,
