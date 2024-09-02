@@ -460,43 +460,65 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
 
     let filters = receivedTransactionFilter(startEvent, federation.modulePubkeys.ledger);
 
-    const s = new NDKSubscription(
-      ndk,
-      filters,
-      { closeOnEose: true },
-      NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true),
-    );
+    setTimeout(() => {
+      ndk
+        .fetchEvents(filters, { closeOnEose: true }, NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true))
+        .then(async (events) => {
+          let statusEvent = Array.from(events).find((event) => {
+            const tTag = event.getMatchingTags('t')[0][1];
 
-    let handledResponse = false;
+            if (statusTags.includes(tTag)) return event;
+          });
 
-    const t2 = setTimeout(() => {
-      s.stop();
-      if (onError) onError('Unexpected error');
-      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-      resolve(null);
-    }, 10000);
+          if (statusEvent) {
+            console.log('resolviendo estado');
+            let nostrEvent = await statusEvent.toNostrEvent();
+            let tTag = statusEvent.getMatchingTags('t')[0][1];
 
-    s.on('event', async (event: NDKEvent) => {
-      let nostrEvent = await event.toNostrEvent();
+            if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
+            if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
 
-      let tTag = event.getMatchingTags('t')[0][1];
-      if (tTag && !handledResponse) {
-        if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
-        if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
-        handledResponse = true;
-      }
+            if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
 
-      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-      resolve(event);
-    });
+            resolve(nostrEvent);
+          }
+        });
+    }, 500);
 
-    s.on('eose', () => {
-      clearTimeout(t2);
+    // const s = new NDKSubscription(
+    //   ndk,
+    //   filters,
+    //   { closeOnEose: true },
+    //   NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true),
+    // );
 
-      if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-      resolve(null);
-    });
+    // const t2 = setTimeout(() => {
+    //   s.stop();
+    //   if (onError) onError('Unexpected error');
+    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+    //   resolve(null);
+    // }, 10000);
 
-    s.start();
+    // s.on('event', async (event: NDKEvent) => {
+    //   let nostrEvent = await event.toNostrEvent();
+
+    //   let tTag = event.getMatchingTags('t')[0][1];
+    //   if (tTag) {
+    //     if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
+    //     if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
+    //   }
+
+    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+    //   resolve(event);
+    // });
+
+    // s.on('eose', () => {
+    //   clearTimeout(t2);
+
+    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
+    //   resolve(null);
+    // });
+
+    // s.start();
   });
 }
