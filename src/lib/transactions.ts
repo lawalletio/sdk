@@ -481,7 +481,14 @@ export async function executeTransaction(params: ExecuteTransactionParams) {
             if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
 
             resolve(nostrEvent);
+          } else {
+            if (onError) onError('Unexpected error');
+            resolve(null);
           }
+        })
+        .catch(() => {
+          if (onError) onError('Unexpected error');
+          resolve(null);
         });
     }, 500);
 
