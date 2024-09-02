@@ -1,6 +1,6 @@
 {
   "name": "@lawallet/sdk",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "LaWallet software dev kit",
   "type": "module",
   "private": false,
@@ -11,7 +11,8 @@
   },
   "scripts": {
     "dev": "pnpm run build:esm+types --watch",
-    "build": "pnpm run build:esm+types",
+    "build": "pnpm run build:esm+types && pnpm run build:cjs",
+    "build:cjs": "tsc --project ./etc/tsconfig.cjs.json --outDir ./dist/cjs --module commonjs",
     "build:esm+types": "tsc --project ./etc/tsconfig.build.json --outDir ./dist/esm --declaration --declarationMap --declarationDir ./dist/types",
     "clean": "rm -rf dist && rm -rf node_modules",
     "lint": "eslint 'src/**/*.{m,c,}ts' 'test/**/*.{m,c,}ts' --config ./etc/eslint.config.mjs --no-error-on-unmatched-pattern"
@@ -48,7 +49,8 @@
     }
   },
   "sideEffects": false,
-  "main": "./dist/esm/exports/index.js",
+  "main": "./dist/cjs/exports/index.js",
+  "module": "./dist/esm/exports/index.js",
   "types": "./dist/types/exports/index.d.ts",
   "typings": "./dist/types/exports/index.d.ts",
   "files": [
@@ -62,12 +64,14 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/types/exports/index.d.ts",
-      "default": "./dist/esm/exports/index.js"
+      "require": "./dist/cjs/exports/index.js",
+      "import": "./dist/esm/exports/index.js",
+      "types": "./dist/types/exports/index.d.ts"
     },
     "./types": {
-      "types": "./dist/types/exports/types.d.ts",
-      "default": "./dist/esm/exports/types.js"
+      "require": "./dist/cjs/exports/types.js",
+      "import": "./dist/esm/exports/types.js",
+      "types": "./dist/types/exports/types.d.ts"
     },
     "./package.json": "./package.json"
   },
