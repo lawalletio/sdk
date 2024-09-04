@@ -203,7 +203,8 @@ export class Wallet extends Identity {
         ...event,
       };
 
-      const ndkEvent: NDKEvent = new NDKEvent(this.ndk, eventTemplate);
+      const tmpNDK = createNDKInstance(this.federation.relaysList, this._signer);
+      const ndkEvent: NDKEvent = new NDKEvent(tmpNDK, eventTemplate);
       await ndkEvent.sign();
 
       return ndkEvent.toNostrEvent();
