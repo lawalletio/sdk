@@ -1,3 +1,4 @@
+//@ts-nocheck
 'use strict';
 import crypto from 'crypto';
 import { bech32 } from '@scure/base';

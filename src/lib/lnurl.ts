@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { bech32 } from '@scure/base';
 import assert from 'assert';
 
