@@ -33,6 +33,11 @@ export class Federation {
     return this._config.relaysList;
   }
 
+  async signUpInfo() {
+    const data = await this._api.get(`${this.lightningDomain}/api/signup`);
+    return data;
+  }
+
   async signUpRequest() {
     const data = await this._api.get(`${this.lightningDomain}/api/signup/request`);
     return data;
