@@ -343,56 +343,63 @@ export class Wallet extends Identity {
   }
 
   async registerHandle(username: string) {
-    const { requirePayment, data, error } = await this.federation.signUpRequest();
-    if (error) throw new Error(error);
+    try {
+      const { requirePayment, data, error } = await this.federation.signUpRequest();
+      if (error) throw new Error(error);
 
-    let nonce = '';
-    if (!requirePayment) {
-      const { buyEvent } = data;
-      if (!buyEvent) throw new Error('Buy request event not found');
+      let nonce = '';
+      if (!requirePayment) {
+        const { buyEvent } = data;
+        if (!buyEvent) throw new Error('Buy request event not found');
 
-      nonce = await this.federation.claimNonce(buyEvent);
-    } else {
-      const { zapRequest, invoice } = data;
-      if (!zapRequest || !invoice) throw new Error('Zap request not found');
+        nonce = await this.federation.claimNonce(buyEvent);
+      } else {
+        const { zapRequest, invoice } = data;
+        if (!zapRequest || !invoice) throw new Error('Zap request not found');
 
-      const payEvent = await this.payInvoice({ paymentRequest: invoice });
+        const payEvent = await this.payInvoice({ paymentRequest: invoice });
 
-      if (payEvent) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (payEvent) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
-        const tag = getTagValue(payEvent.tags, 't');
+          const tag = getTagValue(payEvent.tags, 't');
 
-        if (tag.endsWith('error')) {
-          const parsedContent = parseContent(payEvent.content);
-          throw new Error(parsedContent.messages);
+          if (tag.endsWith('error')) {
+            const parsedContent = parseContent(payEvent.content);
+            throw new Error(parsedContent.messages);
+          }
+
+          const parsedZapRequest = parseContent(zapRequest);
+
+          const fnFetch = () =>
+            this.ndk.fetchEvent(
+              {
+                kinds: [9735],
+                since: parsedZapRequest.created_at,
+                '#p': [getTagValue(parsedZapRequest.tags, 'p')] ?? [],
+              },
+              { closeOnEose: true },
+              NDKRelaySet.fromRelayUrls(this.federation.relaysList, this.ndk, true),
+            );
+
+          const event = await fetchToNDK<NDKEvent | null>(this.ndk, fnFetch);
+
+          if (!event) throw new Error('Error with zap receipt');
+
+          const zapReceipt = await event.toNostrEvent();
+          nonce = await this.federation.claimNonce(zapReceipt);
         }
-
-        const parsedZapRequest = parseContent(zapRequest);
-
-        const fnFetch = () =>
-          this.ndk.fetchEvent(
-            {
-              kinds: [9735],
-              since: parsedZapRequest.created_at,
-              '#p': [getTagValue(parsedZapRequest.tags, 'p')] ?? [],
-            },
-            { closeOnEose: true },
-            NDKRelaySet.fromRelayUrls(this.federation.relaysList, this.ndk, true),
-          );
-
-        const event = await fetchToNDK<NDKEvent | null>(this.ndk, fnFetch);
-
-        if (!event) throw new Error('Error with zap receipt');
-
-        const zapReceipt = await event.toNostrEvent();
-        nonce = await this.federation.claimNonce(zapReceipt);
       }
+
+      const identityEvent = buildIdentityEvent(nonce, username, this.pubkey);
+      const signedEvent = await this.signEvent(identityEvent);
+
+      await this.federation.claimIdentity(signedEvent);
+      await this.fetch();
+
+      return true;
+    } catch (err) {
+      return false;
     }
-
-    const identityEvent = buildIdentityEvent(nonce, username, this.pubkey);
-    const signedEvent = await this.signEvent(identityEvent);
-
-    return this.federation.claimIdentity(signedEvent);
   }
 }
