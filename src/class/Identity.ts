@@ -96,6 +96,10 @@ export class Identity {
     return nip19.npubEncode(this._pubkey);
   }
 
+  set username(name: string) {
+    this._username = name;
+  }
+
   get username() {
     return this._username;
   }

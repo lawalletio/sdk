@@ -394,8 +394,8 @@ export class Wallet extends Identity {
       const identityEvent = buildIdentityEvent(nonce, username, this.pubkey);
       const signedEvent = await this.signEvent(identityEvent);
 
-      await this.federation.claimIdentity(signedEvent);
-      await this.fetch();
+      const claimed = await this.federation.claimIdentity(signedEvent);
+      if (claimed) this.username = username;
 
       return true;
     } catch (err) {
