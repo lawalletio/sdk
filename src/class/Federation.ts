@@ -33,6 +33,30 @@ export class Federation {
     return this._config.relaysList;
   }
 
+  async signUpRequest() {
+    const data = await this._api.get(`${this.lightningDomain}/api/signup/request`);
+    return data;
+  }
+
+  async claimNonce(event: NostrEvent) {
+    const response = await this._api.post(`${this.lightningDomain}/api/nonce`, { body: JSON.stringify(event) });
+    if (!response.nonce) throw new Error('Error on claim nonce');
+
+    return response.nonce;
+  }
+
+  async claimIdentity(event: NostrEvent) {
+    const response = await this._api.post(`${this.lightningDomain}/api/identity`, { body: JSON.stringify(event) });
+    if (!response || !response.pubkey) throw new Error('Error on claim identity');
+
+    return true;
+  }
+
+  async existIdentity(username: string) {
+    const nameWasTaken = await this._api.get(`${this.lightningDomain}/api/identity?name=${username}`);
+    return nameWasTaken?.['names']?.['fer'];
+  }
+
   getLUD06(pubkey: string) {
     // return this._api.get(`${this.lightningDomain}/api/lud06/${pubkey}`);
     return {

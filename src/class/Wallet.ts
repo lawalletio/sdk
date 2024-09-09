@@ -1,8 +1,8 @@
+import { hexToBytes } from '@noble/hashes/utils';
 import NDK, {
   NDKEvent,
   NDKKind,
   NDKPrivateKeySigner,
-  NDKRelay,
   NDKRelaySet,
   NDKSigner,
   NDKTag,
@@ -17,7 +17,7 @@ import {
   cardsFilter,
   parseCardsEvents,
 } from '../lib/cards.js';
-import { buildZapRequestEvent } from '../lib/events.js';
+import { buildIdentityEvent, buildZapRequestEvent } from '../lib/events.js';
 import lightBolt11 from '../lib/light-bolt11.js';
 import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
 import {
@@ -28,7 +28,7 @@ import {
   parseTransactionsEvents,
   transactionsFilters,
 } from '../lib/transactions.js';
-import { createInvoice, nowInSeconds } from '../lib/utils.js';
+import { createInvoice, getTag, getTagValue, nowInSeconds, parseContent } from '../lib/utils.js';
 import { CardsInfo } from '../types/Card.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import {
@@ -42,8 +42,6 @@ import {
 import { Card } from './Card.js';
 import { Federation } from './Federation.js';
 import { Identity } from './Identity.js';
-import { Api } from '../lib/api.js';
-import { hexToBytes } from '@noble/hashes/utils';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
@@ -260,7 +258,7 @@ export class Wallet extends Identity {
     }
   }
 
-  async payInvoice(params: InvoiceTransactionParams) {
+  async payInvoice(params: InvoiceTransactionParams): Promise<NostrEvent | null> {
     const { paymentRequest, metadata = {}, onSuccess, onError } = params;
     const invoiceInfo = lightBolt11.decode(paymentRequest);
 
@@ -342,5 +340,59 @@ export class Wallet extends Identity {
 
     const cardActivationEvent: NostrEvent = await buildCardActivationEvent(nonce, sk, this.federation);
     return activateCard(cardActivationEvent, this.federation);
+  }
+
+  async registerHandle(username: string) {
+    const { requirePayment, data, error } = await this.federation.signUpRequest();
+    if (error) throw new Error(error);
+
+    let nonce = '';
+    if (!requirePayment) {
+      const { buyEvent } = data;
+      if (!buyEvent) throw new Error('Buy request event not found');
+
+      nonce = await this.federation.claimNonce(buyEvent);
+    } else {
+      const { zapRequest, invoice } = data;
+      if (!zapRequest || !invoice) throw new Error('Zap request not found');
+
+      const payEvent = await this.payInvoice({ paymentRequest: invoice });
+
+      if (payEvent) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const tag = getTagValue(payEvent.tags, 't');
+
+        if (tag.endsWith('error')) {
+          const parsedContent = parseContent(payEvent.content);
+          throw new Error(parsedContent.messages);
+        }
+
+        const parsedZapRequest = parseContent(zapRequest);
+
+        const fnFetch = () =>
+          this.ndk.fetchEvent(
+            {
+              kinds: [9735],
+              since: parsedZapRequest.created_at,
+              '#p': [getTagValue(parsedZapRequest.tags, 'p')] ?? [],
+            },
+            { closeOnEose: true },
+            NDKRelaySet.fromRelayUrls(this.federation.relaysList, this.ndk, true),
+          );
+
+        const event = await fetchToNDK<NDKEvent | null>(this.ndk, fnFetch);
+
+        if (!event) throw new Error('Error with zap receipt');
+
+        const zapReceipt = await event.toNostrEvent();
+        nonce = await this.federation.claimNonce(zapReceipt);
+      }
+    }
+
+    const identityEvent = buildIdentityEvent(nonce, username, this.pubkey);
+    const signedEvent = await this.signEvent(identityEvent);
+
+    return this.federation.claimIdentity(signedEvent);
   }
 }

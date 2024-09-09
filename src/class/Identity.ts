@@ -4,6 +4,7 @@ import { createNDKInstance, fetchToNDK } from '../lib/ndk.js';
 import { parseWalias } from '../lib/utils.js';
 import { LNRequestResponse } from '../types/LnUrl.js';
 import { Federation } from './Federation.js';
+import { buildIdentityEvent } from '../lib/events.js';
 
 export type FetchParameters = {
   enabled: boolean;

@@ -448,7 +448,7 @@ export function receivedTransactionFilter(startEvent: NostrEvent, ledgerPubkey: 
   };
 }
 
-export async function executeTransaction(params: ExecuteTransactionParams) {
+export async function executeTransaction(params: ExecuteTransactionParams): Promise<NostrEvent | null> {
   const { ndk, startEvent, federation, onSuccess, onError } = params;
 
   let published = await federation.httpPublish(startEvent);

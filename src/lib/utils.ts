@@ -46,6 +46,7 @@ export function uint8ArrayToHex(uint8Array: Uint8Array): string {
 }
 
 export const getTagValue = (tags: NDKTag[], keyTag: string): string => {
+  if (!tags || !tags.length) return '';
   const tag: NDKTag | undefined = tags.find((tag) => tag[0] === keyTag);
   return tag ? tag[1]! : '';
 };
