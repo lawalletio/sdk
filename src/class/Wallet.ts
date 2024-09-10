@@ -72,7 +72,7 @@ export class Wallet extends Identity {
 
       const pubkey = getPublicKey(hexToBytes(signer.privateKey));
 
-      super({ pubkey, ndk, federation, fetchParams: params?.fetchParams });
+      super({ pubkey, ndk, federation, fetchParams: params?.fetchParams ?? { enabled: true } });
 
       this._signer = signer;
     } catch (err) {
