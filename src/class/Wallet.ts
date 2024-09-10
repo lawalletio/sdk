@@ -41,12 +41,13 @@ import {
 } from '../types/Transaction.js';
 import { Card } from './Card.js';
 import { Federation } from './Federation.js';
-import { Identity } from './Identity.js';
+import { FetchParameters, Identity } from './Identity.js';
 
 type WalletParameters = {
   signer?: NDKPrivateKeySigner; // TODO: Change NDKPrivateKeySigner to signer:NDKSigner
   ndk?: NDK;
   federationConfig?: CreateFederationConfigParams;
+  fetchParams?: FetchParameters;
 };
 
 type ZapParams = {
@@ -65,12 +66,13 @@ export class Wallet extends Identity {
 
     try {
       const federation = new Federation(params?.federationConfig);
+
       const ndk = params?.ndk ?? createNDKInstance(federation.relaysList, signer);
       if (params?.ndk) ndk.signer = signer;
 
       const pubkey = getPublicKey(hexToBytes(signer.privateKey));
 
-      super({ pubkey, ndk, federation, fetchParams: { enabled: true } });
+      super({ pubkey, ndk, federation, fetchParams: params?.fetchParams });
 
       this._signer = signer;
     } catch (err) {
