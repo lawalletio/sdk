@@ -59,7 +59,7 @@ export class Federation {
 
   async existIdentity(username: string) {
     const nameWasTaken = await this._api.get(`${this.lightningDomain}/api/identity?name=${username}`);
-    return nameWasTaken?.['names']?.['fer'];
+    return nameWasTaken?.['names']?.[username];
   }
 
   getLUD06(pubkey: string) {
