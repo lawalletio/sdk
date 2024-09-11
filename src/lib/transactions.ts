@@ -489,7 +489,7 @@ export async function executeTransaction(params: ExecuteTransactionParams): Prom
           if (onError) onError('Unexpected error');
           resolve(null);
         });
-    }, 500);
+    }, 100);
 
     // const s = new NDKSubscription(
     //   ndk,
