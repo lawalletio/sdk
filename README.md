@@ -132,7 +132,7 @@ Alice.sendTransaction({
   - [x] restartLimits
   - [x] replaceLimits
   - [x] createTransferEvent
-- [ ] Wallet
+- [x] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information
     - [x] getBalance
@@ -148,7 +148,7 @@ Alice.sendTransaction({
   - [x] payInvoice
   - [x] claimCardTransfer
   - [x] addCard / activateCard
-  - [ ] registerHandle (request + payment + claim)
+  - [x] registerHandle (request + payment + claim)
 
 - [ ] Tests coverage
   - [ ] Federation
