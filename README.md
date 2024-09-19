@@ -113,6 +113,20 @@ Alice.sendTransaction({
     console.log('An error occurred with the transaction');
   },
 });
+
+// Send internal transaction
+Alice.sendInternalTransaction({
+  tokenId: 'BTC',
+  receiver: 'USER_HEX_PUBKEY',
+  amount: 1000,
+  comment: 'Hello!',
+  onSuccess: () => {
+    console.log('Transaction successfully sent');
+  },
+  onError: () => {
+    console.log('An error occurred with the transaction');
+  },
+});
 ```
 
 ## To - do
@@ -132,7 +146,7 @@ Alice.sendTransaction({
   - [x] restartLimits
   - [x] replaceLimits
   - [x] createTransferEvent
-- [ ] Wallet
+- [x] Wallet
   - [x] Signer + Identity
   - [x] Wallet Information
     - [x] getBalance
@@ -148,10 +162,9 @@ Alice.sendTransaction({
   - [x] payInvoice
   - [x] claimCardTransfer
   - [x] addCard / activateCard
-  - [ ] registerHandle (request + payment + claim)
+  - [x] registerHandle (request + payment + claim)
 
 - [ ] Tests coverage
   - [ ] Federation
   - [ ] Identity
   - [ ] Wallet
-  - [ ] Client
