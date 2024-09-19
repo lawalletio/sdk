@@ -28,7 +28,7 @@ import {
   parseTransactionsEvents,
   transactionsFilters,
 } from '../lib/transactions.js';
-import { createInvoice, getTag, getTagValue, nowInSeconds, parseContent } from '../lib/utils.js';
+import { createInvoice, getTag, getTagValue, nowInSeconds, parseContent, regexHex } from '../lib/utils.js';
 import { CardsInfo } from '../types/Card.js';
 import type { CreateFederationConfigParams } from '../types/Federation.js';
 import {
@@ -294,6 +294,18 @@ export class Wallet extends Identity {
 
   async sendInternalTransaction(params: InternalTransactionParams) {
     const { tokenId, receiver, amount, comment = '', metadata = {}, onSuccess, onError } = params;
+    if (!regexHex.test(receiver)) throw new Error('Receiver must be a public key in hexadecimal format');
+
+    /* Autocomplete sender metadata */
+    if (!metadata.sender && this.walias) metadata.sender = this.walias;
+
+    /* Autocomplete receiver metadata */
+    if (!metadata.receiver) {
+      let tmpIdentity = new Identity({ pubkey: receiver });
+      await tmpIdentity.fetch();
+
+      if (tmpIdentity.walias) metadata.receiver = tmpIdentity.walias;
+    }
 
     const metadataTag: NDKTag = await encryptMetadataTag(this.signer, receiver, metadata);
 

@@ -1,6 +1,8 @@
 import { NDKTag } from '@nostr-dev-kit/ndk';
 import { Api } from './api.js';
 
+export const regexHex = /^[0-9a-fA-F]+$/;
+
 export const nowInSeconds = (): number => {
   return Math.floor(Date.now() / 1000);
 };
@@ -103,18 +105,9 @@ export async function createInvoice(params: InvoiceParams) {
 
   const api = Api();
   const response = await api.get(
-    `${callback}?amount=${milisatoshis}${nostr ? `&nostr=${nostr}` : ''}${comment ? `&comment=${escapingBrackets(comment)}` : ''}`,
+    `${callback}?amount=${milisatoshis}${nostr ? `&nostr=${nostr}` : ''}${comment ? `&comment=${JSON.stringify(escapingBrackets(comment))}` : ''}`,
   );
 
   if (!response) throw new Error('An error occurred while creating a invoice');
   return response;
 }
-
-// export const decodeInvoice = (invoice: string): DecodedInvoiceReturns | undefined => {
-//   try {
-//     const decodedInvoice = lightBolt11.decode(invoice);
-//     return decodedInvoice;
-//   } catch {
-//     return;
-//   }
-// };

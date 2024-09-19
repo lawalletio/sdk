@@ -490,41 +490,5 @@ export async function executeTransaction(params: ExecuteTransactionParams): Prom
           resolve(null);
         });
     }, 100);
-
-    // const s = new NDKSubscription(
-    //   ndk,
-    //   filters,
-    //   { closeOnEose: true },
-    //   NDKRelaySet.fromRelayUrls(federation.relaysList, ndk, true),
-    // );
-
-    // const t2 = setTimeout(() => {
-    //   s.stop();
-    //   if (onError) onError('Unexpected error');
-    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-    //   resolve(null);
-    // }, 10000);
-
-    // s.on('event', async (event: NDKEvent) => {
-    //   let nostrEvent = await event.toNostrEvent();
-
-    //   let tTag = event.getMatchingTags('t')[0][1];
-    //   if (tTag) {
-    //     if (successTags.includes(tTag) && onSuccess) onSuccess(nostrEvent);
-    //     if (errorTags.includes(tTag) && onError) onError(nostrEvent.content);
-    //   }
-
-    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-    //   resolve(event);
-    // });
-
-    // s.on('eose', () => {
-    //   clearTimeout(t2);
-
-    //   if (!relaysConnectedBeforeFetch) killRelaysConnection(ndk);
-    //   resolve(null);
-    // });
-
-    // s.start();
   });
 }
