@@ -5,7 +5,7 @@ SDK for LaWallet
 ## Installation
 
 ```bash
-pnpm add @lawallet/sdk @nostr-dev-kit/ndk
+pnpm add @lawallet/sdk
 ```
 
 ## Usage examples
@@ -13,11 +13,10 @@ pnpm add @lawallet/sdk @nostr-dev-kit/ndk
 ### Fetch
 
 ```ts
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
-import { Wallet } from '@lawallet/sdk';
+import { Wallet, createSigner } from '@lawallet/sdk';
 
-const Alice = new Wallet({ signer: NDKPrivateKeySigner.generate() });
-const Bob = new Wallet({ signer: NDKPrivateKeySigner.generate() });
+const Alice = new Wallet({ signer: createSigner("ALICE_SECRET_KEY") });
+const Bob = new Wallet({ signer: createSigner("BOB_SECRET_KEY) });
 
 Alice.fetch().then(({ lnurlpData, nostr }) => {
   // returns lnurlpData -> /.well-known/lnurlp/<user> response
