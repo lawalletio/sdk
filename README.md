@@ -16,7 +16,7 @@ pnpm add @lawallet/sdk
 import { Wallet, createSigner } from '@lawallet/sdk';
 
 const Alice = new Wallet({ signer: createSigner("ALICE_SECRET_KEY") });
-const Bob = new Wallet({ signer: createSigner("BOB_SECRET_KEY) });
+const Bob = new Wallet({ signer: createSigner("BOB_SECRET_KEY") });
 
 Alice.fetch().then(({ lnurlpData, nostr }) => {
   // returns lnurlpData -> /.well-known/lnurlp/<user> response
