@@ -68,6 +68,10 @@
     "directory": "packages/sdk"
   },
   "homepage": "https://github.com/lawalletio/sdk#readme",
-  "bugs": { "url": "https://github.com/lawalletio/sdk/issues" },
-  "publishConfig": { "access": "public" }
+  "bugs": {
+    "url": "https://github.com/lawalletio/sdk/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
