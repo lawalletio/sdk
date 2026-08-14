@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "lawallet-sdk",
+  "description": "Agent skills for building on LaWallet with @lawallet/sdk.",
+  "owner": { "name": "La Crypta", "url": "https://github.com/lawalletio" },
+  "plugins": [
+    {
+      "name": "lawallet-sdk",
+      "description": "Integrate @lawallet/sdk: setup and auth, user-facing address claiming, and operator-side provisioning.",
+      "source": "./",
+      "category": "development"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "lawallet-sdk",
+  "version": "1.0.0",
+  "description": "Integrate @lawallet/sdk correctly: nostr-first auth, lightning address claiming (free or paid), and operator-side provisioning for LaWallet instances.",
+  "author": { "name": "La Crypta", "url": "https://github.com/lawalletio" },
+  "skills": "./skills/"
+}
