@@ -1,0 +1,73 @@
+{
+  "name": "@lawallet/sdk",
+  "version": "1.0.0",
+  "description": "Nostr-first TypeScript client and React hooks for LaWallet instances — NIP-98 signed requests, lightning address registration, NWC wallets, LUD-16 and live events",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "nostr-tools": "^2.24.1"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.1.13",
+    "happy-dom": "^20.10.2",
+    "msw": "^2.12.8",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.6"
+  },
+  "keywords": [
+    "lawallet",
+    "nostr",
+    "lightning",
+    "nwc",
+    "nip98",
+    "lud16",
+    "react",
+    "hooks"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lawalletio/sdk.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/lawalletio/sdk#readme",
+  "bugs": { "url": "https://github.com/lawalletio/sdk/issues" },
+  "publishConfig": { "access": "public" }
+}
